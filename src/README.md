@@ -1,0 +1,3 @@
+- `gen_*` (short for generated) are templates that are configured by CMake
+- `win32_*` is the Win32 GUI code. This is exe's distributed outside of the Microsoft Store.
+- `msw_*`, short for Microsoft Windows, is code shared between Win32 and UWP.
