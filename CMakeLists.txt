@@ -33,11 +33,11 @@ add_definitions(
 set(mmcs_libs)
 file(GLOB mmcs_sources "src/mmcs_*")
 list(APPEND mmcs_sources
-	"${GEN_FOLDER}/Changelog.c"
-	"${GEN_FOLDER}/Changelog.h"
+	#"${GEN_FOLDER}/Changelog.c"
+	#"${GEN_FOLDER}/Changelog.h"
 	"${CMAKE_SOURCE_DIR}/thirdparty/stb_image.h"
-	"src/small_zip.c"
-	"src/small_zip.h"
+	#"src/small_zip.c"
+	#"src/small_zip.h"
 )
 
 if (WIN32)
@@ -68,8 +68,8 @@ if (WIN32)
 endif()
 
 # Only executes in cmake's configure step...
-execute_process(COMMAND ${CMAKE_COMMAND} -E tar "cfv" "${GEN_FOLDER}/Changelog.zip" --format=zip "${CMAKE_SOURCE_DIR}/Changelog.txt")
-execute_process(COMMAND ${CMAKE_COMMAND} -DGEN_FOLDER=${GEN_FOLDER} -P "${CMAKE_SOURCE_DIR}/cmake/ChangelogHandler.cmake")
+#execute_process(COMMAND ${CMAKE_COMMAND} -E tar "cfv" "${GEN_FOLDER}/Changelog.zip" --format=zip "${CMAKE_SOURCE_DIR}/Changelog.txt")
+#execute_process(COMMAND ${CMAKE_COMMAND} -DGEN_FOLDER=${GEN_FOLDER} -P "${CMAKE_SOURCE_DIR}/cmake/ChangelogHandler.cmake")
 
 #list(FILTER mmcs_sources EXCLUDE REGEX "README\\.md") # bye bye
 add_executable(mmcs WIN32 ${mmcs_sources})

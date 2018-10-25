@@ -8,10 +8,13 @@ int argc = 0;
 oschar ** argv = NULL;
 bool isPortable = false;
 
-#ifdef MMCS_WIN32
+oschar * ExePath = NULL;
+oschar * ExeDir = NULL;
+
+#if MMCS_WIN32
 //HINSTANCE hInstance = NULL;
 //wchar_t ExePath[NT_MAX_PATH + 1];
-wchar_t * ExePath = NULL;
+//wchar_t * ExePath = NULL;
 wchar_t OriginalWorkingDirectory[NT_MAX_PATH + 1];
 #endif
 

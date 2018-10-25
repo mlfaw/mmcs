@@ -5,7 +5,7 @@
 #include <string.h> // strrchr()/wcsrchr()
 #include <stdlib.h> // malloc(), free()
 
-#ifdef MMCS_WIN32
+#if MMCS_WIN32
 #include <Windows.h>
 #include <shellapi.h> // CommandLineToArgvW()
 #include <Objbase.h> // CoInitializeEx()
@@ -28,7 +28,7 @@ static bool get_exe_and_dir(oschar ** exe_out, oschar ** dir_out)
 	oschar * exe = NULL;
 	oschar * dir = NULL;
 
-#ifdef MMCS_WIN32
+#if MMCS_WIN32
 	exe = _wcsdup(
 		NtCurrentTeb()->ProcessEnvironmentBlock->ProcessParameters->ImagePathName.Buffer
 	);
@@ -45,7 +45,7 @@ static bool get_exe_and_dir(oschar ** exe_out, oschar ** dir_out)
 #endif
 
 	oschar * rchr = osstrrchr(exe, _OS('/'));
-#ifdef MMCS_WIN32
+#if MMCS_WIN32
 	oschar * bs = osstrrchr(exe, _OS('\\'));
 	rchr = (rchr > bs) ? rchr : bs;
 #endif
@@ -67,7 +67,7 @@ err:
 
 static int main_inner(int argc, oschar ** argv)
 {
-	//#ifdef MMCS_WIN32
+	//#if MMCS_WIN32
 	//	UNICODE_STRING us;
 	//	RtlInitUnicodeString(&us, L"mmcs_portable.txt");
 	//	OBJECT_ATTRIBUTES objattr;
@@ -104,7 +104,7 @@ static int main_inner(int argc, oschar ** argv)
 	//
 	//#endif
 
-#ifdef MMCS_WIN32
+#if MMCS_WIN32
 	mmcs::isPortable =
 		GetFileAttributesW(portable_filename) != INVALID_FILE_ATTRIBUTES;
 #else
@@ -117,7 +117,7 @@ static int main_inner(int argc, oschar ** argv)
 		return mmcs::NativeMessaging_Handler();
 	}
 
-#ifdef MMCS_WIN32
+#if MMCS_WIN32
 	return win32::MwEverything();
 #else
 
@@ -132,22 +132,20 @@ int main(int argc, oschar ** argv)
 
 	osfile curdir;
 
-	oschar * exe;
-	oschar * dir;
-	if (!get_exe_and_dir(&exe, &dir))
+	if (!get_exe_and_dir(&mmcs::ExePath, &mmcs::ExeDir))
 		return 1; // TODO: log
 
 	int ret = main_inner(argc, argv);
 
 	// Cleanup...
-	free(exe);
-	free(dir);
+	free(mmcs::ExePath);
+	free(mmcs::ExeDir);
 
 	return ret;
 }
 
 
-#ifdef MMCS_WIN32
+#if MMCS_WIN32
 // Save the original current-directory then set the current-directory to the system-drive.
 // This is done so a HANDLE to the original current-directory is not kept open.
 // (HANDLE kept open = can't delete directory / eject drive)

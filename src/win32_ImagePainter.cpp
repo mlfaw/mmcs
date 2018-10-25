@@ -46,18 +46,99 @@ static unsigned frames = 0;
 static wchar_t frameBuf[20] = L"0";
 static unsigned frameBufLen = 1;
 
+namespace win32 {
+
+static int nxtidx = 0;
+static const char * ff[] = {
+	"C:\\code\\mmcs\\Dk92uSaX0AAj3yT.png",
+	"C:\\code\\mmcs\\0.jpg",
+};
+static bool setupNextImage()
+{
+	int x, y, comp;
+	unsigned char * data = stbi_load(
+		ff[nxtidx],
+		&x,
+		&y,
+		&comp,
+		STBI_rgb_alpha // load as R8G8B8A8
+	);
+	if (!data) return false;
+	nxtidx = !nxtidx;
+	if (ImageData)
+		stbi_image_free(ImageData);
+	ImageData = data;
+	ImageX = x;
+	ImageY = y;
+	ImageComp = comp;
+	return true;
+}
+
+static BOOL setupSwapChain(HWND hwnd)
+{
+	HRESULT hr;
+	DXGI_SCALING dxgiScalingMode = DXGI_SCALING_NONE;
+	if (false) // Windows 7 doesn't support DXGI_SCALING_NONE
+		dxgiScalingMode = DXGI_SCALING_ASPECT_RATIO_STRETCH;
+
+	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {0};
+	swapChainDesc.Width = 0; // use automatic sizing
+	swapChainDesc.Height = 0;
+	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // todo?
+	swapChainDesc.Stereo = false; // todo?
+	swapChainDesc.SampleDesc.Count = 1; // don't use multi-sampling
+	swapChainDesc.SampleDesc.Quality = 0;
+	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	swapChainDesc.BufferCount = 2; // use double buffer to enable flip
+	swapChainDesc.Scaling = dxgiScalingMode;
+	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL; // all apps must use this swapeffect (UWP)?
+	swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH; // ?
+
+	hr = dxgiFactory2->CreateSwapChainForHwnd(
+		d3d11Device,
+		hwnd,
+		&swapChainDesc,
+		NULL, // ?
+		NULL,
+		&dxgiSwapChain1
+	);
+	if (FAILED(hr)) {
+		return FALSE;
+	}
+	// Ensure that DXGI doesn't queue more than one frame at a time.
+	hr = dxgiDevice1->SetMaximumFrameLatency(1);
+	if (FAILED(hr)) return FALSE;
+
+	D2D1_PIXEL_FORMAT pixelFormat = {};
+	pixelFormat.format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	pixelFormat.alphaMode = D2D1_ALPHA_MODE_IGNORE;
+
+	D2D1_BITMAP_PROPERTIES1 bitmapProperties1 = D2D1::BitmapProperties1(
+		D2D1_BITMAP_OPTIONS_TARGET | D2D1_BITMAP_OPTIONS_CANNOT_DRAW,
+		pixelFormat,
+		96.0f,
+		96.0f,
+		NULL
+	);
+
+	hr = dxgiSwapChain1->GetBuffer(0, IID_PPV_ARGS(&dxgiBackBuffer));
+	if (FAILED(hr)) return FALSE;
+	hr = d2d1DeviceContext->CreateBitmapFromDxgiSurface(
+		dxgiBackBuffer,
+		&bitmapProperties1,
+		&d2d1BackBufferBitmap
+	);
+	if (FAILED(hr)) return FALSE;
+	d2d1DeviceContext->SetTarget(d2d1BackBufferBitmap);
+
+	return TRUE;
+}
+
 static BOOL IpWmCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
 {
 	HRESULT hr;
 
-	ImageData = stbi_load(
-		"C:\\code\\mmcs\\Dk92uSaX0AAj3yT.png",
-		&ImageX,
-		&ImageY,
-		&ImageComp,
-		STBI_rgb_alpha // load as R8G8B8A8
-	);
-	if (!ImageData) return FALSE;
+	if (!setupNextImage()) return FALSE;
 
 	const D2D1_FACTORY_OPTIONS factoryOptions = { D2D1_DEBUG_LEVEL_INFORMATION };
 	hr = D2D1CreateFactory(
@@ -118,57 +199,7 @@ static BOOL IpWmCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
 	hr = dxgiAdapter->GetParent(IID_PPV_ARGS(&dxgiFactory2));
 	if (FAILED(hr)) return FALSE;
 
-	DXGI_SCALING dxgiScalingMode = DXGI_SCALING_NONE;
-	if (false) // Windows 7 doesn't support DXGI_SCALING_NONE
-		dxgiScalingMode = DXGI_SCALING_ASPECT_RATIO_STRETCH;
-
-	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {0};
-	swapChainDesc.Width = 0; // use automatic sizing
-	swapChainDesc.Height = 0;
-	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // todo?
-	swapChainDesc.Stereo = false; // todo?
-	swapChainDesc.SampleDesc.Count = 1; // don't use multi-sampling
-	swapChainDesc.SampleDesc.Quality = 0;
-	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	swapChainDesc.BufferCount = 2; // use double buffer to enable flip
-	swapChainDesc.Scaling = dxgiScalingMode;
-	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL; // all apps must use this swapeffect (UWP)?
-	swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH; // ?
-
-	hr = dxgiFactory2->CreateSwapChainForHwnd(
-		d3d11Device,
-		hwnd,
-		&swapChainDesc,
-		NULL, // ?
-		NULL,
-		&dxgiSwapChain1
-	);
-	if (FAILED(hr)) return FALSE;
-	// Ensure that DXGI doesn't queue more than one frame at a time.
-	hr = dxgiDevice1->SetMaximumFrameLatency(1);
-	if (FAILED(hr)) return FALSE;
-
-	D2D1_PIXEL_FORMAT pixelFormat = {};
-	pixelFormat.format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	pixelFormat.alphaMode = D2D1_ALPHA_MODE_IGNORE;
-
-	D2D1_BITMAP_PROPERTIES1 bitmapProperties1 = D2D1::BitmapProperties1(
-		D2D1_BITMAP_OPTIONS_TARGET | D2D1_BITMAP_OPTIONS_CANNOT_DRAW,
-		pixelFormat,
-		96.0f,
-		96.0f,
-		NULL
-	);
-
-	hr = dxgiSwapChain1->GetBuffer(0, IID_PPV_ARGS(&dxgiBackBuffer));
-	if (FAILED(hr)) return FALSE;
-	hr = d2d1DeviceContext->CreateBitmapFromDxgiSurface(
-		dxgiBackBuffer,
-		&bitmapProperties1,
-		&d2d1BackBufferBitmap
-	);
-	if (FAILED(hr)) return FALSE;
-	d2d1DeviceContext->SetTarget(d2d1BackBufferBitmap);
+	if (!setupSwapChain(hwnd)) return FALSE;
 
 	//RECT rc;
 	//if (!GetClientRect(hwnd, &rc)) return FALSE;
@@ -183,6 +214,10 @@ static BOOL IpWmCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
 	//	D2D1::HwndRenderTargetProperties(hwnd, size),
 	//	&d2d1DeviceContext
 	//);
+
+	D2D1_PIXEL_FORMAT pixelFormat = {};
+	pixelFormat.format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	pixelFormat.alphaMode = D2D1_ALPHA_MODE_IGNORE;
 
 	D2D1_BITMAP_PROPERTIES masterChiefBitmapProperties = {};
 	masterChiefBitmapProperties.pixelFormat = pixelFormat;
@@ -263,8 +298,8 @@ static void IpWmPaintInner(HWND hwnd)
 
 	if (!GetClientRect(hwnd, &rc)) return;
 	D2D1_RECT_F destRect = D2D1::RectF(
-		(float)rc.left,
-		(float)rc.top,
+		0.0f,
+		0.0f,
 		(float)rc.right,
 		(float)rc.bottom
 	);
@@ -282,6 +317,13 @@ static void IpWmPaintInner(HWND hwnd)
 	// 	destRect,
 	// 	pBlackBrush
 	// );
+
+	// Apply the scale transform to the render target.
+	//d2d1DeviceContext->SetTransform(
+	//	D2D1::Matrix3x2F::Scale(
+	//		D2D1::Size(1.3f, 1.3f),
+	//		D2D1::Point2F(438.0f, 80.5f))
+	//);
 
 	d2d1DeviceContext->DrawBitmap(
 		d2d1MasterChiefBitmap,
@@ -334,9 +376,14 @@ static void IpWmPaint(HWND hwnd)
 	(void)EndPaint(hwnd, &ps);
 }
 
+static bool firstSize = true;
 static void IpWmSize(HWND hwnd, UINT state, int cx, int cy)
 {
-	//if (state == SIZE_MINIMIZED) return;
+	if (state == SIZE_MINIMIZED) return;
+	if (firstSize) {
+		firstSize = false;
+		return;
+	}
 	// Stuff
 
 	//RECT rc;
@@ -344,6 +391,17 @@ static void IpWmSize(HWND hwnd, UINT state, int cx, int cy)
 	//D2D1_SIZE_U size = D2D1::SizeU(cx, cy);
 	//d2d1DeviceContext->Resize(size);
 	//(void)UpdateWindow(hwnd);
+
+	d3d11DeviceContext->ClearState();
+	d3d11DeviceContext->Flush();
+	msw::SafeRelease(&d2d1BackBufferBitmap);
+	msw::SafeRelease(&dxgiBackBuffer);
+	msw::SafeRelease(&dxgiSwapChain1);
+
+	if (!setupSwapChain(hwnd)) {
+		MessageBoxA(NULL, "Failed to setup swap chain", "Fuck", MB_OK);
+		ExitProcess(1);
+	}
 }
 
 static void IpWmSizing(HWND hwnd, UINT edge, RECT * rect)
@@ -364,8 +422,36 @@ static void IpWmDropFiles(HWND hwnd, HDROP hdrop)
 
 static void IpWmMouseWheel(HWND hwnd, int xPos, int yPos, int zDelta, UINT fwKeys)
 {
-	DWORD x = 1;
-	DWORD y = x + 1;
+	if (!setupNextImage()) return;
+	msw::SafeRelease(&d2d1MasterChiefBitmap);
+
+	D2D1_PIXEL_FORMAT pixelFormat = {};
+	pixelFormat.format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	pixelFormat.alphaMode = D2D1_ALPHA_MODE_IGNORE;
+
+	D2D1_BITMAP_PROPERTIES masterChiefBitmapProperties = {};
+	masterChiefBitmapProperties.pixelFormat = pixelFormat;
+	masterChiefBitmapProperties.dpiX = 96.0f;
+	masterChiefBitmapProperties.dpiY = 96.0f;
+
+	HRESULT hr;
+	hr = d2d1DeviceContext->CreateBitmap(
+		D2D1::SizeU(ImageX, ImageY),
+		masterChiefBitmapProperties,
+		&d2d1MasterChiefBitmap
+	);
+	if (FAILED(hr)) return;
+
+	D2D1_RECT_U destRect = {0};
+	destRect.right = ImageX;
+	destRect.bottom = ImageY;
+	d2d1MasterChiefBitmap->CopyFromMemory(
+		&destRect,
+		ImageData,
+		4 * ImageX
+	);
+	if (FAILED(hr)) return;
+	RedrawWindow(hwnd, NULL, NULL, RDW_INVALIDATE);
 }
 
 static LRESULT CALLBACK IpWindowProc(
@@ -393,8 +479,6 @@ static LRESULT CALLBACK IpWindowProc(
 	}
 	return DefWindowProcW(hwnd, uMsg, wParam, lParam);
 }
-
-namespace win32 {
 
 bool ImagePainter_Create(HWND hParent)
 {

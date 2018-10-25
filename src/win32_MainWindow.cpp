@@ -12,8 +12,7 @@
 
 #include "generated/win32_resource.h"
 #include "win32_RegisterAsDefault.hpp"
-#include "mmcs_ChangelogOpener.hpp"
-#include "mmcs_OpenUrl.hpp"
+#include "mmcs_Open.hpp" // OpenUrlAsync(), OpenFileAsync()
 #include "mmcs_os.hpp"
 #include "mmcs_GetDirectoryFiles.hpp"
 #include "mmcs_globals.hpp"
@@ -93,8 +92,18 @@ static void MwWmCommand(HWND hwnd, int id, HWND hwndCtrl, UINT codeNotify)
 			mmcs::OpenUrlSync("https://github.com/mlfaw/mmcs");
 			break;
 		case IDM_HELP_CHANGELOG:
-			mmcs::ChangelogHandler(/*hwnd*/);
-			break;
+			{
+				const oschar * const changelogtxt = _OS("/changelog.txt");
+				auto len = osstrlen(mmcs::ExeDir) + osstrlen(changelogtxt) + 1;
+				oschar * changelogpath = (oschar *)malloc(len * sizeof(oschar));
+				if (!changelogpath)
+					return;
+				osstrcpy(changelogpath, mmcs::ExeDir);
+				osstrcat(changelogpath, changelogtxt);
+				mmcs::OpenFileSync(changelogpath);
+				free(changelogpath);
+				break;
+			}
 		case IDM_HELP_REGISTER_AS_DEFAULT:
 			win32::RegisterAsDefault_Launch();
 			break;

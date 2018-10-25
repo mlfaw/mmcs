@@ -1,10 +1,10 @@
 /*{REPLACEMEWITHLICENSE}*/
 #include "mmcs_SelectFilesWindow.hpp"
 
-#ifdef MMCS_WIN32
+#if MMCS_WIN32
 #include <Windows.h>
 #include <shlobj.h>
-#elif defined(MMCS_UWP)
+#elif MMCS_UWP
 // todo
 #else
 // todo
@@ -12,7 +12,7 @@
 
 namespace mmcs {
 
-#ifdef MMCS_WIN32
+#if MMCS_WIN32
 bool SelectFilesWindow(std::vector<osstring> ** results, bool foldersOnly, bool multiSelect)
 {
 // TODO: Decide if each OS impl should be kept in the same function definition...

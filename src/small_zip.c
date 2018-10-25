@@ -44,25 +44,49 @@ static unsigned scan_for_eocd(small_zip_ctx * ctx) {
 		ctx->cd_offset = small_zip_from_le32(&eocd.cd_offset);
 		if (!ctx->cd_offset || ctx->cd_offset > input_len)
 			return 0;
+		uint32_t another_overflow_check = ctx->cd_offset + sizeof(small_zip_cdfh);
+		if (another_overflow_check > input_len || another_overflow_check < ctx->cd_offset)
+			return 0;
 		return 1;
 	} while (p >= input && (p-input) > sizeof(small_zip_eocd));
 	return 0;
 }
 
-// TODO: handled cached files in ctx
 unsigned small_zip_file(small_zip_ctx * ctx, small_zip_file_ctx * file_ctx, uint16_t file_index) {
+	const small_zip_cdfh * cdfh;
+	uint32_t input_len, i;
 	if (!ctx || !file_ctx) return 0;
-	uint32_t input_len = ctx->input_len;
-	const small_zip_cdfh * cdfh = (const small_zip_cdfh *)(ctx->input + ctx->cd_offset);
-	while (file_index--) {
+	if (file_index && file_index-1 > ctx->file_count) return 0;
+	if (ctx->cache_file && ctx->file_index <= file_index && ctx->cached_file.cdfh) {
+		if (ctx->file_index == file_index) {
+			*file_ctx = ctx->cached_file;
+			return 1;
+		}
+		i = file_index - ctx->file_index;
+		cdfh = ctx->cached_file.cdfh;
+	} else {
+		i = file_index;
+		cdfh = (const small_zip_cdfh *)(ctx->input + ctx->cd_offset);
+	}
+	input_len = ctx->input_len;
+	while (i--) {
 		uint32_t offset = small_zip_from_le16(&cdfh->filename_len)
 		                + small_zip_from_le16(&cdfh->extra_field_len)
 		                + small_zip_from_le16(&cdfh->file_comment_len);
+		// TODO: Can an optimizing compiler remove the overflow check?
+		if (offset > input_len || offset + input_len < offset)
+			return 0;
 		cdfh = (const small_zip_cdfh *)((const unsigned char *)cdfh + offset);
 	}
-	file_ctx->input = ctx->input;
-	file_ctx->cdfh = cdfh;
-	file_ctx->input_len = ctx->input_len;
+	small_zip_file_ctx asdf = {0};
+	asdf.cdfh = cdfh;
+	asdf.input = ctx->input;
+	asdf.input_len = ctx->input_len;
+	*file_ctx = asdf;
+	if (ctx->cache_file) {
+		ctx->file_index = file_index;
+		ctx->cached_file = asdf;
+	}
 	return 1;
 }
 
@@ -77,30 +101,47 @@ const char * small_zip_file_name(const small_zip_file_ctx * file, uint16_t * fil
 }
 
 unsigned small_zip_decompress_init(const small_zip_file_ctx * file, small_zip_decompress_ctx * ctx) {
+	if (!file || !ctx) return 0;
 	const small_zip_cdfh * cdfh = file->cdfh;
-	uint16_t compression_method = cdfh->compression_method;
+	uint16_t compression_method = small_zip_from_le16(&cdfh->compression_method);
 	if (compression_method != 0 && compression_method != 8) return 0;
-	ctx->compression_method = compression_method;
-	ctx->byte_offset = 0;
-	ctx->bit_offset = 0;
-	uint32_t offset = small_zip_from_le16(&cdfh->filename_len)
-	                + small_zip_from_le16(&cdfh->extra_field_len)
-	                + small_zip_from_le16(&cdfh->file_comment_len);
-	const unsigned char * data = file->input + small_zip_from_le32(&cdfh->lfh_offset) + offset;
+	small_zip_decompress_ctx decctx = {0};
+	decctx.compression_method = compression_method;
+	decctx.byte_offset = 0;
+	decctx.bit_offset = 0;
+	decctx.compressed_size = small_zip_from_le32(&cdfh->compressed_size);
+	uint32_t offset = small_zip_from_le32(&cdfh->lfh_offset);
+	uint32_t input_len = file->input_len;
+	if (offset > input_len) return 0;
+	uint16_t flen = small_zip_from_le16(&cdfh->filename_len);
+	if (offset+flen > input_len || offset+flen < offset) return 0;
+	offset += flen;
+	uint16_t elen = small_zip_from_le16(&cdfh->extra_field_len);
+	if (offset+elen > input_len || offset+elen < offset) return 0;
+	offset += elen;
+	if (offset > input_len || offset + decctx.compressed_size < offset) return 0;
+	const unsigned char * data = file->input + offset;
 	if (small_zip_from_le16(&cdfh->flags) & 4) { // need to deal with the data descriptor...
 		uint32_t sig;
 		memcpy(&sig, data, 4);
-		if (small_zip_from_le32(&sig) == 0x08074b50)
-			data += 4;
-		data += sizeof(small_zip_data_descriptor);
+		uint32_t x = (small_zip_from_le32(&sig) == 0x08074b50) ? 4 : 0;
+		x += sizeof(small_zip_data_descriptor);
+		if (offset + x > input_len || offset + x < offset) return 0;
+		data += x;
 	}
-	ctx->data = data;
+	decctx.data = data;
+	*ctx = decctx;
 	return 1;
 }
 
+// returns the number of bytes decompressed
+// returns 0 when done decompressing
+// returns -1 on error
 uint32_t small_zip_decompress(small_zip_decompress_ctx * ctx, void * void_buf, uint32_t bufsize) {
+	if (!ctx || !void_buf || !bufsize) return 0;
 	if (ctx->compression_method == 0) { // stored
 		uint32_t remaining = ctx->compressed_size - ctx->byte_offset;
+		if (!remaining) return 0;
 		uint32_t count = remaining > bufsize ? bufsize : remaining;
 		if (count == -1) count = -1 - 1; // well this should be impossible lol...
 		memcpy(void_buf, ctx->data + ctx->byte_offset, count);
@@ -113,6 +154,7 @@ uint32_t small_zip_decompress(small_zip_decompress_ctx * ctx, void * void_buf, u
 	const unsigned char * data = ctx->data;
 	uint32_t byte_offset = ctx->byte_offset;
 	uint8_t bit_offset = ctx->bit_offset;
+	uint16_t block_offset = ctx->block_offset;
 
 	while (1) {
 		uint8_t bit = next_bit(data, &byte_offset, &bit_offset);
@@ -130,7 +172,8 @@ uint32_t small_zip_decompress(small_zip_decompress_ctx * ctx, void * void_buf, u
 		}
 		case 1: // fixed huffman codes for literal and distance codes
 		case 2: // dynamic huffman codes
-		case 3: // error in compressed data
+		default:
+		//case 3: // error in compressed data
 			return -1;
 		}
 	}
@@ -140,7 +183,8 @@ uint32_t small_zip_decompress(small_zip_decompress_ctx * ctx, void * void_buf, u
 
 unsigned small_zip_init(small_zip_ctx * ctx_out, const void * input, uint32_t input_len) {
 	small_zip_ctx ctx;
-	if (!ctx_out || !input || input_len < 100) return 0;
+	// how about a reasonable input_len...
+	if (!ctx_out || !input || input_len < 100 || input_len > 0x7FFFFFFF) return 0;
 	ctx.input = (const unsigned char *)input;
 	ctx.input_len = input_len;
 	//ctx.cached_file = NULL;

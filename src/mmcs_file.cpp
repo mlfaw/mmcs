@@ -1,7 +1,7 @@
 /*{REPLACEMEWITHLICENSE}*/
 #include "mmcs_file.hpp"
 
-#ifdef _WIN32
+#if MMCS_WIN32
 //#include <shlwapi.h>
 #else
 #include <sys/types.h>
@@ -18,7 +18,7 @@ File::File()
 
 File::File(const oschar * fileName, const char * flags) // default flags of "r"
 {
-#ifdef _WIN32
+#if MMCS_WIN32
 	DWORD access = 0;
 	//DWORD creationDisposition = 0;
 	if (strchr(flags, 'r'))
@@ -71,7 +71,7 @@ bool File::isDirectory()
 {
 	if (!isValid())
 		return false;
-#ifdef _WIN32
+#ifdef MMCS_WIN32
 	BY_HANDLE_FILE_INFORMATION info;
 	BOOL bRes = GetFileInformationByHandle(handle_, &info);
 	if (!bRes) return false; // throw exception?
@@ -90,7 +90,7 @@ File File::openContainingDirectory(const oschar * fileName, const char * flags)
 	if (!len || len < 3) return File::Invalid(); // TODO: hmm...
 
 	const oschar * lastSeparator = osstrrchr(fileName, _OS('/'));
-#ifdef _WIN32
+#ifdef MMCS_WIN32
 	{
 		const oschar * lastSeparator2 = osstrrchr(fileName, L'\\');
 		if (lastSeparator < lastSeparator2)
@@ -118,7 +118,7 @@ bool File::getSize(uint64_t * outsize)
 {
 	if (!isValid())
 		return false;
-#ifdef _WIN32
+#ifdef MMCS_WIN32
 	LARGE_INTEGER li;
 	if (!GetFileSizeEx(handle_, &li)) return false;
 	*outsize = (uint64_t)li.QuadPart;
@@ -132,7 +132,7 @@ bool File::getSize(uint64_t * outsize)
 
 bool File::myRead(void * buf, uint32_t size)
 {
-#ifdef _WIN32
+#ifdef MMCS_WIN32
 	DWORD bytes_read;
 	if (!ReadFile(handle_, buf, size, &bytes_read, NULL))
 		return false;

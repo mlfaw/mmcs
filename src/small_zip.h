@@ -1,5 +1,32 @@
 /*{REPLACEMEWITHLICENSE}*/
 #pragma once
+
+/*
+bool extract_file()
+{
+	unsigned char buf[2048];
+	uint32_t bytes_decompressed;
+	small_zip_ctx ctx;
+	small_zip_file_ctx file_ctx;
+	small_zip_decompress_ctx decompress_ctx;
+
+	if (!small_zip_init(&ctx, GENERATED_Changelog_zip, GENERATED_Changelog_zip_size)) return false;
+	if (!small_zip_file(&ctx, &file_ctx, 0)) return false; // grab the first file....
+	if (!small_zip_decompress_init(&file_ctx, &decompress_ctx)) return false;
+	while ((bytes_decompressed = small_zip_decompress(&decompress_ctx, buf, 2048))) {
+		if (bytes_decompressed == -1) // error in compressed data
+			return false;
+#ifdef _WIN32
+		DWORD bytes_written;
+		if (!WriteFile(file_handle, buf, bytes_decompressed, &bytes_written, NULL))
+			return false;
+#else
+
+#endif
+	}
+}
+*/
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -94,6 +121,7 @@ typedef struct {
 	uint32_t byte_offset;
 	uint32_t compressed_size;
 	uint16_t compression_method;
+	uint16_t block_offset; // how many bytes into a stored block we are...
 	uint8_t bit_offset;
 } small_zip_decompress_ctx;
 
