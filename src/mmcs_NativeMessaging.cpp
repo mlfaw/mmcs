@@ -43,7 +43,7 @@ bool NativeMessaging_IsMode(int argc, oschar ** argv)
 	return true;
 }
 
-int NativeMessaging_Handler(void)
+int NativeMessaging_Handler()
 {
 
 	return 1;

@@ -9,7 +9,7 @@ namespace mmcs {
 
 #ifndef MMCS_UWP
 bool NativeMessaging_IsMode(int argc, oschar ** argv);
-int NativeMessaging_Handler(void);
+int NativeMessaging_Handler();
 #endif
 
 }

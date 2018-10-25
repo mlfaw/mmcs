@@ -36,6 +36,8 @@ list(APPEND mmcs_sources
 	#"${GEN_FOLDER}/Changelog.c"
 	#"${GEN_FOLDER}/Changelog.h"
 	"${CMAKE_SOURCE_DIR}/thirdparty/stb_image.h"
+	"${CMAKE_SOURCE_DIR}/thirdparty/sqlite-amalgamation-3250200/sqlite3.c"
+	"${CMAKE_SOURCE_DIR}/thirdparty/sqlite-amalgamation-3250200/sqlite3.h"
 	#"src/small_zip.c"
 	#"src/small_zip.h"
 )
@@ -49,6 +51,7 @@ if (WIN32)
 		-D_CRT_SECURE_NO_WARNINGS
 		-DWINVER=0x0601
 		-D_WIN32_WINNT=0x0601
+		-DSQLITE_WIN32_GETVERSIONEX=0 # something something deprecation warnings on GetVersionEx[AW]
 	)
 	list(APPEND mmcs_libs d3d11 d2d1 dxgi dwrite)
 	file(GLOB win_sources "src/msw_*" "src/win32_*")
@@ -64,6 +67,7 @@ if (WIN32)
 	configure_file(src/gen_win32.in.manifest    "${GEN_FOLDER}/win32.manifest")
 	# so win32_resource can find the icon...
 	configure_file("${CMAKE_SOURCE_DIR}/resources/mmcs.ico" "${GEN_FOLDER}/mmcs.ico" COPYONLY)
+
 	list(APPEND mmcs_libs Comctl32 WS2_32 ntdll)
 endif()
 

@@ -60,7 +60,7 @@ static INT_PTR CALLBACK DialogProc(
 	return FALSE;
 }
 
-int RegisterAsDefault_Handler(void)
+int RegisterAsDefault_Handler()
 {
 	INT_PTR ret = DialogBoxParamW(
 		GetModuleHandle(NULL),
@@ -79,7 +79,7 @@ int RegisterAsDefault_Handler(void)
 	return 0;
 }
 
-void RegisterAsDefault_Launch(void)
+void RegisterAsDefault_Launch()
 {
 	if (mmcs::isPortable) {
 		(void)MessageBoxW(

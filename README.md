@@ -72,11 +72,13 @@ List of things to make/add/use:
 - Search across multiple sites with tags.
 
 Misc notes:
-- Language translations?
-- Use namespace tags like hydrus
 - Icon sizes: 16, 20, 24, 32, 40, 48, 64, 96, 128, 256, 512
 - Tag relationships? (aka relevant tags)
 - Version format like 2018.08.05.13?
+- ~~puff.c (small inflator for DEFLATE from zlib/contrib)~~
+- ~~APPNOTE.TXT - .ZIP File Format Specification~~
+- PhAddLayoutItem(&LayoutManager, GetDlgItem(hwndDlg, IDCANCEL), NULL, PH_ANCHOR_BOTTOM | PH_ANCHOR_RIGHT);
+- ListViewSample.cpp
 
 
 Relevant links or projects:
@@ -97,10 +99,3 @@ Relevant links or projects:
   - Many links to other downloaders.
 - https://github.com/CuddleBear92/Hydrus-Presets-and-Scripts/issues/57
   - Often, images from websites will not be the same image that a person created. This is due to resizing, reencoding, and stripping of metadata. This has links for perceptual hashing instead of file-content hashing.
-
-misc todo:
-- puff.c (small inflator for DEFLATE from zlib/contrib)
-- APPNOTE.TXT - .ZIP File Format Specification
-- Stop with the changelog.zip embedding... a changelog should be distributed as a .txt in the install directory... running a program to see a changelog & version is not cool
-- PhAddLayoutItem(&LayoutManager, GetDlgItem(hwndDlg, IDCANCEL), NULL, PH_ANCHOR_BOTTOM | PH_ANCHOR_RIGHT);
-- ListViewSample.cpp

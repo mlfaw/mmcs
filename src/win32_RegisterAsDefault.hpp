@@ -5,7 +5,7 @@
 
 namespace win32 {
 
-void RegisterAsDefault_Launch(void);
-int RegisterAsDefault_Handler(void);
+void RegisterAsDefault_Launch();
+int RegisterAsDefault_Handler();
 
 }

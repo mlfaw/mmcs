@@ -1,4 +1,9 @@
 /*{REPLACEMEWITHLICENSE}*/
+#if MMCS_WIN32
+// This motherfucker is right here at the top before anything can pull in Windows.h
+#include <WinSock2.h>
+#endif
+
 #include "mmcs_os.hpp"
 #include "mmcs_globals.hpp"
 #include "mmcs_NativeMessaging.hpp"
@@ -112,13 +117,19 @@ static int main_inner(int argc, oschar ** argv)
 		access(portable_filename, F_OK) != -1;
 #endif
 
+	// TODO: Disable eventually
+	mmcs::isPortable = true;
+
 	if (mmcs::NativeMessaging_IsMode(argc, argv)) {
 		// TODO: Figure out how portable will interact with this...
 		return mmcs::NativeMessaging_Handler();
 	}
 
 #if MMCS_WIN32
-	return win32::MwEverything();
+	win32::MainWindow mw;
+	if (!mw.Init(600, 400, CW_USEDEFAULT, CW_USEDEFAULT, true))
+		return 1;
+	return mw.Run();
 #else
 
 #endif
@@ -130,7 +141,7 @@ int main(int argc, oschar ** argv)
 	mmcs::argc = argc;
 	mmcs::argv = argv;
 
-	osfile curdir;
+	//osfile curdir;
 
 	if (!get_exe_and_dir(&mmcs::ExePath, &mmcs::ExeDir))
 		return 1; // TODO: log
@@ -153,7 +164,7 @@ int main(int argc, oschar ** argv)
 //       nChars = GetCurrentDirectory(0, NULL);
 //       malloc((nChars + 1) * sizeof(wchar_t));
 //       etc...
-bool reset_current_directory(void)
+bool reset_current_directory()
 {
 	DWORD nChars;
 	wchar_t windows_dir[MAX_PATH]; // MAX_PATH (260) is intentional
