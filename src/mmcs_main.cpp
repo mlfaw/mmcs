@@ -135,6 +135,60 @@ static int main_inner(int argc, oschar ** argv)
 #endif
 }
 
+#include <tls.h>
+#define CURL_STATICLIB
+#include <curl/curl.h>
+
+#include <stdio.h>
+static size_t write_callback(char *ptr, size_t size, size_t nmemb, void *userdata)
+{
+	//size_t total_bytes = size * nmemb;
+	//printf("bytes = %llu\n", nmemb*size);
+	fwrite(ptr, size, nmemb, stdout);
+	return size * nmemb;
+}
+
+static size_t header_callback(char *buffer, size_t size, size_t nitems, void *userdata)
+{
+	fwrite(buffer, size, nitems, stdout);
+	return size * nitems;
+}
+
+bool curl_test()
+{
+	bool success = false;
+
+	if (tls_init())
+		return false;
+
+	CURLcode res;
+	CURL *curl = curl_easy_init();
+	if (!curl)
+		return false;
+
+	if (curl_easy_setopt(curl, CURLOPT_URL, "https://www.google.com/"))
+		goto out;
+	// TODO: figure out cert.pem / ca-bundle.crt with LibreSSL & CURL
+	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
+	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0);
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)1);
+	curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, header_callback);
+	curl_easy_setopt(curl, CURLOPT_HEADERDATA, (void *)1);
+
+	AllocConsole();
+	FILE *fp;
+	freopen_s(&fp, "CONOUT$", "w", stdout);
+	res = curl_easy_perform(curl);
+	fclose(fp);
+	FreeConsole();
+	success = (res == CURLE_OK);
+
+out:
+	curl_easy_cleanup(curl);
+	return success;
+}
+
 int main(int argc, oschar ** argv)
 {
 	// global variables in commandline.hpp/cpp
@@ -145,6 +199,15 @@ int main(int argc, oschar ** argv)
 
 	if (!get_exe_and_dir(&mmcs::ExePath, &mmcs::ExeDir))
 		return 1; // TODO: log
+
+	{
+		if (curl_global_init(CURL_GLOBAL_ALL))
+			return 1;
+		bool success = curl_test();
+		curl_global_cleanup();
+		if (!success)
+			return 1;
+	}
 
 	int ret = main_inner(argc, argv);
 

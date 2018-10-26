@@ -13,13 +13,20 @@ set(MMCS_DESCRIPTION "MMCS - media viewer and tagger")
 set(MMCS_NAME        "MMCS - My Media Categories Suite")
 set(MMCS_EXE         "mmcs.exe")
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+set(GEN_FOLDER_BASE "${CMAKE_CURRENT_BINARY_DIR}/_generated")
+include_directories("${GEN_FOLDER_BASE}")
+set(GEN_FOLDER "${GEN_FOLDER_BASE}/generated")
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" "${GEN_FOLDER_BASE}")
 include(CreateCResources)
 include(MSVCParallelBuild)
 #include(MSVCStaticLibs)
 
-include_directories("${CMAKE_CURRENT_BINARY_DIR}/_generated")
-set(GEN_FOLDER "${CMAKE_CURRENT_BINARY_DIR}/_generated/generated")
+set(MY_LIBRESSL_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/libressl-2.8.2/include")
+set(MY_LIBRESSL_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/libressl")
+configure_file("${CMAKE_SOURCE_DIR}/cmake/FindOpenSSL.in.cmake" "${GEN_FOLDER_BASE}/FindOpenSSL.cmake" @ONLY)
+# Includes our static-built-libressl in place of OpenSSL
+find_package(OpenSSL REQUIRED)
 
 add_definitions(
 	-DMMCS_YEAR=${MMCS_YEAR}
@@ -70,6 +77,54 @@ if (WIN32)
 
 	list(APPEND mmcs_libs Comctl32 WS2_32 ntdll)
 endif()
+
+include(ExternalProject)
+if (MSVC)
+	set(__BUILD_TYPE_PREFIX "${CMAKE_BUILD_TYPE}/")
+else()
+	set(__BUILD_TYPE_PREFIX "")
+endif()
+
+set(CURL_SOURCE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/curl-7.61.1")
+set(CURL_BUILD_DIR "${CMAKE_BINARY_DIR}/curl/src/curl-build")
+if (CMAKE_BUILD_TYPE MATCHES Debug)
+	set(CURL_LIB_POSTFIX "-d")
+else()
+	set(CURL_LIB_POSTFIX "")
+endif()
+set(CURL_CMAKE_ARGS
+	-DBUILD_CURL_EXE:BOOL=OFF
+	-DBUILD_SHARED_LIBS:BOOL=OFF
+	-DHTTP_ONLY:BOOL=ON
+	-DCMAKE_USE_LIBSSH2:BOOL=OFF
+	-DCMAKE_USE_OPENSSL:BOOL=ON
+	-DCURL_ZLIB:BOOL=OFF
+	-DENABLE_MANUAL:BOOL=OFF
+	-DCURL_CA_BUNDLE:STRING=none
+	-DCMAKE_MODULE_PATH:STRING=${CMAKE_MODULE_PATH}
+	-DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
+	-DBUILD_TESTING:BOOL=OFF
+)
+ExternalProject_Add(
+	curl
+	PREFIX curl
+	INSTALL_COMMAND ""
+	SOURCE_DIR "${CURL_SOURCE_DIR}"
+	CMAKE_CACHE_ARGS "${CURL_CMAKE_ARGS}"
+)
+
+include_directories(
+	"${OPENSSL_INCLUDE_DIR}"
+	"${CURL_SOURCE_DIR}/include"
+	"${CURL_BUILD_DIR}/lib"
+)
+
+list(APPEND mmcs_libs
+	OpenSSL::Crypto
+	OpenSSL::SSL
+	"${LIBRESSL_TLS_LIBRARY}"
+	"${CURL_BUILD_DIR}/lib/${__BUILD_TYPE_PREFIX}libcurl${CURL_LIB_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}"
+)
 
 # Only executes in cmake's configure step...
 #execute_process(COMMAND ${CMAKE_COMMAND} -E tar "cfv" "${GEN_FOLDER}/Changelog.zip" --format=zip "${CMAKE_SOURCE_DIR}/Changelog.txt")
