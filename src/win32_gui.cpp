@@ -31,7 +31,29 @@
 // 	return true;
 // }
 
+#include <gdiplus.h>
+
 namespace win32 {
+
+static Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+static ULONG_PTR gdiplusToken;
+bool GuiInit()
+{
+	auto status = Gdiplus::GdiplusStartup(
+		&gdiplusToken,
+		&gdiplusStartupInput,
+		NULL
+	);
+	if (status != Gdiplus::Ok)
+		return false;
+
+	return true;
+}
+
+void GuiUnInit()
+{
+	Gdiplus::GdiplusShutdown(gdiplusToken);
+}
 
 // WM_GETMINMAXINFO
 // limit the minimum and maximum size.

@@ -25,6 +25,7 @@
 #include <winternl.h> // PTEB, PPEB, NtCreateFile()
 #include "win32_RegisterAsDefault.hpp"
 #include "win32_MainWindow.hpp"
+#include "win32_gui.hpp"
 #include "msw_misc.hpp" // NT_MAX_PATH
 #else
 #include <unistd.h> // readlink()
@@ -133,10 +134,14 @@ static int main_inner(int argc, oschar ** argv)
 	}
 
 #if MMCS_WIN32
-	win32::MainWindow mw;
-	if (!mw.Init(600, 400, CW_USEDEFAULT, CW_USEDEFAULT, true))
+	if (!win32::GuiInit())
 		return 1;
-	return mw.Run();
+	win32::MainWindow mw;
+	if (!mw.Init(600, 400, CW_USEDEFAULT, CW_USEDEFAULT, false))
+		return 1;
+	int ret = mw.Run();
+	win32::GuiUnInit();
+	return ret;
 #else
 
 #endif

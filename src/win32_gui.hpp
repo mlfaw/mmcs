@@ -1,14 +1,11 @@
 /*{REPLACEMEWITHLICENSE}*/
 #pragma once
 #include <Windows.h>
-//#include "generated/win32_resource.h"
 
 namespace win32 {
 
-enum WINDOW_MESSAGES {
-	WM_MY_NOTHING = WM_APP + 50,
-	WM_MY_OPEN_FILES,
-};
+bool GuiInit();
+void GuiUnInit();
 
 // WM_GETMINMAXINFO
 // limit the minimum and maximum size.

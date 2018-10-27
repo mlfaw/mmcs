@@ -20,6 +20,13 @@
 #include "mmcs_SelectFilesWindow.hpp"
 #include "win32_ImagePainter.hpp"
 
+#include <iomanip>
+#include <sstream>
+#include <string>
+#include <iostream>
+
+#include <gdiplus.h>
+
 namespace win32 {
 
 void MainWindow::WmCommand(HWND hwnd, int id, HWND hwndCtrl, UINT codeNotify)
@@ -27,7 +34,8 @@ void MainWindow::WmCommand(HWND hwnd, int id, HWND hwndCtrl, UINT codeNotify)
 	// Menu or Accelerator
 	if (hwndCtrl == (HWND)0 || hwndCtrl == (HWND)1)
 	{
-		switch (id) {
+		switch (id)
+		{
 		case 0: // User clicked on a separator...
 			break;
 		case IDM_FILE_NEW_TAB:
@@ -142,13 +150,88 @@ void MainWindow::WmDestroy(HWND hwnd)
 	PostQuitMessage(0);
 }
 
+Gdiplus::Image * Image = NULL;
 void MainWindow::WmPaint(HWND hwnd)
 {
+	if (!Image)
+	{
+		Image = Gdiplus::Image::FromFile(L"C:\\code\\mmcs\\Dk92uSaX0AAj3yT.png", FALSE);
+	}
+
 	PAINTSTRUCT ps;
 	HDC hdc = BeginPaint(hwnd, &ps);
 	if (!hdc) return;
 
+	if (Image)
+	{
+		RECT rc;
+		GetClientRect(hwnd, &rc);
 
+		Gdiplus::RectF imgRect;
+		Gdiplus::Unit imgUnit;
+		Image->GetBounds(&imgRect, &imgUnit);
+
+		double imgW = imgRect.Width;
+		double imgH = imgRect.Height;
+		double clW = (double)rc.right;
+		double clH = (double)rc.bottom;
+		double outX = 0, outY = 0, outW = clW, outH = clH;
+		double scaleH = clH / imgH,
+			scaleW = clW / imgW;
+
+		if (scaleW < scaleH)
+		{
+			outW = clW;
+			outH = imgH * scaleW;
+			outX = 0;
+			outY = (clH - outH) / 2;
+		}
+		else
+		{
+			outW = imgW * scaleH;
+			outH = clH;
+			outX = (clW - outW) / 2;
+			outY = 0;
+		}
+
+		auto destRect =  Gdiplus::RectF(
+			(Gdiplus::REAL)outX,
+			(Gdiplus::REAL)outY,
+			(Gdiplus::REAL)outW,
+			(Gdiplus::REAL)outH
+		);
+
+		auto pGraphics = Gdiplus::Graphics::FromHDC(hdc);
+
+		pGraphics->DrawImage(
+			Image,
+			destRect,
+			imgRect,
+			imgUnit,
+			(const Gdiplus::ImageAttributes *)NULL
+		);
+
+#if 0
+		std::wstringstream ss_sH;
+		ss_sH << L"scaleH = " << std::setprecision(2) << scaleH;
+		auto x_sH = ss_sH.str();
+		TextOutW(hdc, 0, 0, x_sH.c_str(), (int)x_sH.length());
+		std::wstringstream ss_sW;
+		ss_sW << L"scaleW = " << std::setprecision(2) << scaleW;
+		auto x_sW = ss_sW.str();
+		TextOutW(hdc, 0, 16, x_sW.c_str(), (int)x_sW.length());
+		std::wstringstream ss_clW;
+		ss_clW << L"clW = " << clW;
+		auto x_clW = ss_clW.str();
+		TextOutW(hdc, 0, 32, x_clW.c_str(), (int)x_clW.length());
+		std::wstringstream ss_clH;
+		ss_clH << L"clH = " << clH;
+		auto x_clH = ss_clH.str();
+		TextOutW(hdc, 0, 48, x_clH.c_str(), (int)x_clH.length());
+#endif
+	
+		delete pGraphics;
+	}
 
 	(void)EndPaint(hwnd, &ps);
 }
@@ -181,6 +264,7 @@ LRESULT CALLBACK MainWindow::WndProc(
 		HANDLE_MSG(hwnd, WM_SHOWWINDOW, this_->WmShowWindow);
 		HANDLE_MSG(hwnd, WM_ENDSESSION, this_->WmEndSession);
 		HANDLE_MSG(hwnd, WM_DESTROY,    this_->WmDestroy);
+		HANDLE_MSG(hwnd, WM_PAINT,      this_->WmPaint);
 	}
 
 	return DefWindowProcW(hwnd, uMsg, wParam, lParam);
@@ -237,7 +321,7 @@ bool MainWindow::Init(int w, int h, int x, int y, bool maximize)
 
 	WNDCLASSEXW wc;
 	wc.cbSize = sizeof(wc);
-	wc.style = 0;
+	wc.style = CS_HREDRAW | CS_VREDRAW;
 	wc.lpfnWndProc = MainWindow::WndProc;
 	wc.cbClsExtra = 0;
 	wc.cbWndExtra = 0;

@@ -59,6 +59,7 @@ if (WIN32)
 		-DWINVER=0x0601
 		-D_WIN32_WINNT=0x0601
 		-DSQLITE_WIN32_GETVERSIONEX=0 # something something deprecation warnings on GetVersionEx[AW]
+		-DGDIPVER=0x0110 # GDI+ 1.1 for the Graphics->DrawImage() func we use
 	)
 	list(APPEND mmcs_libs d3d11 d2d1 dxgi dwrite)
 	file(GLOB win_sources "src/msw_*" "src/win32_*")
@@ -75,7 +76,7 @@ if (WIN32)
 	# so win32_resource can find the icon...
 	configure_file("${CMAKE_SOURCE_DIR}/resources/mmcs.ico" "${GEN_FOLDER}/mmcs.ico" COPYONLY)
 
-	list(APPEND mmcs_libs Comctl32 WS2_32 ntdll)
+	list(APPEND mmcs_libs Comctl32 WS2_32 ntdll gdiplus)
 endif()
 
 include(ExternalProject)
