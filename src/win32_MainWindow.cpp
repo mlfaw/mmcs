@@ -252,7 +252,6 @@ LRESULT CALLBACK MainWindow::WndProc(
 		return DefWindowProcW(hwnd, uMsg, wParam, lParam);
 	}
 
-	// TODO: Assume this can't be NULL?
 	auto this_ = (MainWindow *)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
 
 	switch (uMsg)

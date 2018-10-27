@@ -202,6 +202,9 @@ out:
 	return success;
 }
 
+#include "mmcs_GetDirectoryFiles.hpp"
+#include <vector>
+#include <string>
 int main(int argc, oschar ** argv)
 {
 	// global variables in commandline.hpp/cpp
@@ -212,6 +215,21 @@ int main(int argc, oschar ** argv)
 
 	if (!get_exe_and_dir(&mmcs::ExePath, &mmcs::ExeDir))
 		return 1; // TODO: log
+
+	std::vector<osstring> * files;
+	HANDLE hDir = CreateFileW(
+		L"C:\\",
+		GENERIC_READ,
+		FILE_SHARE_READ | FILE_SHARE_WRITE,
+		NULL,
+		OPEN_EXISTING,
+		FILE_FLAG_BACKUP_SEMANTICS,
+		NULL
+	);
+	if (!mmcs::GetDirectoryFilesFromHandle(&files, hDir))
+	{
+
+	}
 
 	{
 		if (curl_global_init(CURL_GLOBAL_ALL))
