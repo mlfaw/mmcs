@@ -1,4 +1,11 @@
 /*{REPLACEMEWITHLICENSE}*/
+
+// https://curl.haxx.se/libcurl/c/libcurl-tutorial.html
+// TODO: CURLOPT_VERBOSE, CURLOPT_DEBUGFUNCTION, CURLOPT_FORBID_REUSE?
+// TODO: curl_global_init_mem() with strdup() checking a hash-table for static-strings... or something?
+// TODO: Remove CURL and wrap libtls around an HTTP header parser?
+//       libtls has tls_config_set_ca_mem() which is :ok_hand:
+
 #if MMCS_WIN32
 // This motherfucker is right here at the top before anything can pull in Windows.h
 #include <WinSock2.h>
@@ -140,6 +147,7 @@ static int main_inner(int argc, oschar ** argv)
 #include <curl/curl.h>
 
 #include <stdio.h>
+//#include <stdlib.h>
 static size_t write_callback(char *ptr, size_t size, size_t nmemb, void *userdata)
 {
 	//size_t total_bytes = size * nmemb;

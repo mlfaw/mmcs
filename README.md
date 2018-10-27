@@ -80,6 +80,15 @@ Misc notes:
 - PhAddLayoutItem(&LayoutManager, GetDlgItem(hwndDlg, IDCANCEL), NULL, PH_ANCHOR_BOTTOM | PH_ANCHOR_RIGHT);
 - ListViewSample.cpp
 
+Currently used libraries:
+- SQLite 3.25.2 - statically linked
+  - `sqlite3.c` and `sqlite3.h` are added to `mmcs_sources` in `CMakelists.txt`. Simple.
+- LibreSSL 2.8.2 - statically linked
+  - Built by `polyglot_build.bat` before the MMCS CMake superbuild is.
+  - Custom `FindOpenSSL.cmake` file used to link to libcurl & mmcs without modifying an external project's files.
+- libcurl 7.61.1 - statically linked
+  - Uses LibreSSL through modified CMAKE_MODULE_PATH to use custom `FindOpenSSL.cmake`
+  - Replace with another HTTP parser/library wrapped within libtls (HTTPS) / raw sockets (HTTP)?
 
 Relevant links or projects:
 - https://skia.org/
