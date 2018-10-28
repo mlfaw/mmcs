@@ -19,7 +19,7 @@
 #define IDM_HELP_ABOUT                313
 #define ID_OK                         314
 #define ID_CANCEL                     315
-#define ID_TAB_BAR                    316
+#define ID_TABBAR                     316
 
 #define IDD_REGISTER_AS_DEFAULT    317
 #define IDC_JPG                    318
@@ -33,6 +33,8 @@
 #define IDC_EDIT1                  326
 
 #define ID_IMAGEPAINTER            327
+#define IDM_TAB_MENU               328
+#define IDM_CLOSE_TAB              329
 
 
 #define VER_COMPANYNAME_STR      "mlfaw"

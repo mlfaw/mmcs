@@ -55,7 +55,7 @@ bool GetDirectoryFilesFromHandle(std::vector<osstring> ** results, osfile in_hDi
 	char unaligned_buf[1024 * 16];
 	// LONG alignment is a requirement for FileNamesInformation
 	char * long_aligned_buf = (char *)((UINT_PTR)unaligned_buf & ~(UINT_PTR)(sizeof(LONG)));
-	ULONG length = (1024 * 16) - (long_aligned_buf - unaligned_buf);
+	ULONG length = (1024 * 16) - (ULONG)(long_aligned_buf - unaligned_buf);
 
 	IO_STATUS_BLOCK isb;
 	NTSTATUS status = NtQueryDirectoryFile(

@@ -16,6 +16,7 @@
 #include "mmcs_os.hpp"
 #include "mmcs_GetDirectoryFiles.hpp"
 #include "mmcs_globals.hpp"
+#include "win32_gui.hpp"
 #include "win32_hinstance.h"
 #include "mmcs_SelectFilesWindow.hpp"
 #include "win32_ImagePainter.hpp"
@@ -39,17 +40,33 @@ void MainWindow::WmCommand(HWND hwnd, int id, HWND hwndCtrl, UINT codeNotify)
 		case 0: // User clicked on a separator...
 			break;
 		case IDM_FILE_NEW_TAB:
+		{
+			//static int fuck = 1;
+			//wchar_t buf[20] = {};
+			//swprintf(buf, L"files (%d)", ++fuck);
+			tabbar_.Append(L"files (0)");
 			break;
+		}
+		case IDM_CLOSE_TAB:
+		{
+			int idx = tabbar_.right_click_idx_;
+			if (idx == -1)
+				break;
+			tabbar_.right_click_idx_ = -1;
+			TabCtrl_DeleteItem(tabbar_.hwnd_, idx);
+			break;
+		}
 		case IDM_FILE_OPEN_FILES:
-			break;
 		case IDM_FILE_OPEN_FOLDERS:
 		{
 			std::vector<osstring> * results;
-			if (mmcs::SelectFilesWindow(&results, true, false)) {
-				auto & x = results->at(0);
-				auto y = x.c_str();
-				SetCurrentDirectoryW(y);
-				MessageBoxW(NULL, y, L"hey", MB_OK);
+			bool foldersOnly = id == IDM_FILE_OPEN_FOLDERS;
+			if (mmcs::SelectFilesWindow(&results, foldersOnly, true))
+			{
+				for (const auto & x : *results)
+				{
+					MessageBoxW(NULL, x.c_str(), L"", MB_OK);
+				}
 				delete results;
 			}
 			break;
@@ -106,9 +123,59 @@ void MainWindow::WmCommand(HWND hwnd, int id, HWND hwndCtrl, UINT codeNotify)
 	}
 }
 
+LRESULT MainWindow::WmNotify(HWND hwnd, int ctrlId, NMHDR * info)
+{
+	switch (info->code)
+	{
+	default:
+		return 0;
+	case TCN_SELCHANGING:
+		return FALSE; // FALSE to allow changing
+	case TCN_SELCHANGE:
+		return 0; // return value doesn't matter
+	case NM_RCLICK:
+	{
+		// return non-zero to process ourselves instead of it passing up to MainWindow's WM_CONTEXTMENU.
+
+		POINT point;
+
+		if (!GetCursorPos(&point))
+			return 1;
+
+		int popupX = point.x;
+		int popupY = point.y;
+
+		if (!ScreenToClient(info->hwndFrom, &point))
+			return 1;
+
+		TCHITTESTINFO hittest;
+		hittest.pt = point;
+		int idx = TabCtrl_HitTest(info->hwndFrom, &hittest);
+
+		if (idx == -1)
+			return 1;
+	
+		tabbar_.right_click_idx_ = idx;
+		TrackPopupMenu(
+			tabbar_.context_menu_,
+			0, // flags
+			popupX,
+			popupY,
+			0, // reserved
+			hwnd,
+			NULL // prcRect
+		);
+
+		return 1;
+	}
+	}
+}
+
 BOOL MainWindow::WmCreate(HWND hwnd, LPCREATESTRUCT cs)
 {
 	//if (!win32::ImagePainter_Create(hwnd)) return FALSE;
+	if (!tabbar_.Init(hwnd))
+		return FALSE;
 	return TRUE;
 }
 
@@ -150,90 +217,139 @@ void MainWindow::WmDestroy(HWND hwnd)
 	PostQuitMessage(0);
 }
 
-Gdiplus::Image * Image = NULL;
+static inline void imageFit(
+	Gdiplus::RectF & destRect,
+	Gdiplus::RectF & imgRect,
+	double imgW,
+	double imgH,
+	double clW,
+	double clH
+)
+{
+	double destX, destY, destW, destH;
+	double scaleH = clH / imgH;
+	double scaleW = clW / imgW;
+
+	if (scaleW < scaleH)
+	{
+		destW = clW;
+		destH = imgH * scaleW;
+		destX = 0;
+		destY = (clH - destH) / 2;
+	}
+	else
+	{
+		destW = imgW * scaleH;
+		destH = clH;
+		destX = (clW - destW) / 2;
+		destY = 0;
+	}
+
+	destRect = Gdiplus::RectF(
+		(Gdiplus::REAL)destX,
+		(Gdiplus::REAL)destY,
+		(Gdiplus::REAL)destW,
+		(Gdiplus::REAL)destH
+	);
+}
+
+void MainWindow::GetImageLocation(
+	Gdiplus::RectF & destRect,
+	Gdiplus::RectF & imgRect,
+	double imgW,
+	double imgH,
+	double clW,
+	double clH
+)
+{
+	if (fitted_)
+	{
+		imageFit(
+			destRect,
+			imgRect,
+			imgW,
+			imgH,
+			clW,
+			clH
+		);
+		return;
+	}
+
+
+}
+
 void MainWindow::WmPaint(HWND hwnd)
 {
-	if (!Image)
+	if (!image_)
 	{
-		Image = Gdiplus::Image::FromFile(L"C:\\code\\mmcs\\Dk92uSaX0AAj3yT.png", FALSE);
+		image_ = Gdiplus::Image::FromFile(L"C:\\code\\mmcs\\900kb.jpg", FALSE);
 	}
 
 	PAINTSTRUCT ps;
 	HDC hdc = BeginPaint(hwnd, &ps);
 	if (!hdc) return;
 
-	if (Image)
+	if (image_)
 	{
 		RECT rc;
 		GetClientRect(hwnd, &rc);
 
+		Gdiplus::RectF destRect;
 		Gdiplus::RectF imgRect;
 		Gdiplus::Unit imgUnit;
-		Image->GetBounds(&imgRect, &imgUnit);
+		image_->GetBounds(&imgRect, &imgUnit);
 
-		double imgW = imgRect.Width;
-		double imgH = imgRect.Height;
-		double clW = (double)rc.right;
-		double clH = (double)rc.bottom;
-		double outX = 0, outY = 0, outW = clW, outH = clH;
-		double scaleH = clH / imgH,
-			scaleW = clW / imgW;
-
-		if (scaleW < scaleH)
-		{
-			outW = clW;
-			outH = imgH * scaleW;
-			outX = 0;
-			outY = (clH - outH) / 2;
-		}
-		else
-		{
-			outW = imgW * scaleH;
-			outH = clH;
-			outX = (clW - outW) / 2;
-			outY = 0;
-		}
-
-		auto destRect =  Gdiplus::RectF(
-			(Gdiplus::REAL)outX,
-			(Gdiplus::REAL)outY,
-			(Gdiplus::REAL)outW,
-			(Gdiplus::REAL)outH
+		GetImageLocation(
+			destRect,
+			imgRect,
+			imgRect.Width,
+			imgRect.Height,
+			(double)rc.right,
+			(double)rc.bottom
 		);
 
 		auto pGraphics = Gdiplus::Graphics::FromHDC(hdc);
 
 		pGraphics->DrawImage(
-			Image,
+			image_,
 			destRect,
 			imgRect,
 			imgUnit,
 			(const Gdiplus::ImageAttributes *)NULL
 		);
-
-#if 0
-		std::wstringstream ss_sH;
-		ss_sH << L"scaleH = " << std::setprecision(2) << scaleH;
-		auto x_sH = ss_sH.str();
-		TextOutW(hdc, 0, 0, x_sH.c_str(), (int)x_sH.length());
-		std::wstringstream ss_sW;
-		ss_sW << L"scaleW = " << std::setprecision(2) << scaleW;
-		auto x_sW = ss_sW.str();
-		TextOutW(hdc, 0, 16, x_sW.c_str(), (int)x_sW.length());
-		std::wstringstream ss_clW;
-		ss_clW << L"clW = " << clW;
-		auto x_clW = ss_clW.str();
-		TextOutW(hdc, 0, 32, x_clW.c_str(), (int)x_clW.length());
-		std::wstringstream ss_clH;
-		ss_clH << L"clH = " << clH;
-		auto x_clH = ss_clH.str();
-		TextOutW(hdc, 0, 48, x_clH.c_str(), (int)x_clH.length());
-#endif
 	
 		delete pGraphics;
 	}
 
 	(void)EndPaint(hwnd, &ps);
+}
+
+void MainWindow::WmSize(HWND hwnd, UINT state, int cx, int cy)
+{
+	HDWP hdwp = BeginDeferWindowPos(5);
+	if (!hdwp) return; // TODO: Log error?
+	hdwp = DeferWindowPos(
+		hdwp,
+		tabbar_.hwnd_,
+		NULL, // hWndInsertAfter
+		0, // x
+		0, // y
+		cx,
+		cy,
+		SWP_NOZORDER
+	);
+	if (!hdwp) return;
+
+	(void)EndDeferWindowPos(hdwp);
+}
+
+void MainWindow::WmMouseWheel(HWND hwnd, int xPos, int yPos, int zDelta, UINT fwKeys)
+{
+	fitted_ = !fitted_;
+	if (fitted_)
+		return;
+
+
 }
 
 LRESULT CALLBACK MainWindow::WndProc(
@@ -246,9 +362,9 @@ LRESULT CALLBACK MainWindow::WndProc(
 	if (uMsg == WM_NCCREATE)
 	{
 		SetLastError(0);
-		if (!SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)(((LPCREATESTRUCTW)lParam)->lpCreateParams)))
-			if (GetLastError())
-				return FALSE;
+		SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)(((LPCREATESTRUCTW)lParam)->lpCreateParams));
+		if (GetLastError())
+			return FALSE;
 		return DefWindowProcW(hwnd, uMsg, wParam, lParam);
 	}
 
@@ -263,7 +379,10 @@ LRESULT CALLBACK MainWindow::WndProc(
 		HANDLE_MSG(hwnd, WM_SHOWWINDOW, this_->WmShowWindow);
 		HANDLE_MSG(hwnd, WM_ENDSESSION, this_->WmEndSession);
 		HANDLE_MSG(hwnd, WM_DESTROY,    this_->WmDestroy);
-		HANDLE_MSG(hwnd, WM_PAINT,      this_->WmPaint);
+		//HANDLE_MSG(hwnd, WM_PAINT,      this_->WmPaint);
+		HANDLE_MSG(hwnd, WM_SIZE,       this_->WmSize);
+		HANDLE_MSG(hwnd, WM_MOUSEWHEEL, this_->WmMouseWheel);
+		HANDLE_MSG(hwnd, WM_NOTIFY,     this_->WmNotify);
 	}
 
 	return DefWindowProcW(hwnd, uMsg, wParam, lParam);
@@ -355,37 +474,20 @@ bool MainWindow::Init(int w, int h, int x, int y, bool maximize)
 	);
 
 	if (!hwnd_)
-	{
-		(void)DestroyAcceleratorTable(accel_);
-		return false;
-	}
+		goto err;
+
+	win32::UseDefaultFontWithChildren(hwnd_);
 
 	(void)ShowWindow(hwnd_, maximize ? SW_SHOWMAXIMIZED : SW_SHOW);
 	(void)UpdateWindow(hwnd_);
 	return true;
-}
 
-int MainWindow::Run()
-{
-	MSG msg;
-	BOOL bRet;
-	while ((bRet = GetMessage(&msg, NULL, 0, 0)) != 0)
-	{
-		if (bRet == -1)
-		{
-			// TODO: GetLastError() & log & cleanly shutdown any tasks (io, db, network, etc)
-			// just exit for now though
-			return -1;
-		}
-
-		if (!TranslateAcceleratorW(hwnd_, accel_, &msg))
-		{
-			TranslateMessage(&msg);
-			DispatchMessageW(&msg);
-		}
-	}
-
-	return (int)msg.wParam;
+err:
+	if (accel_)
+		(void)DestroyAcceleratorTable(accel_);
+	if (hwnd_)
+		DestroyWindow(hwnd_);
+	return false;
 }
 
 }

@@ -13,32 +13,24 @@
 // https://docs.microsoft.com/en-us/windows/desktop/api/WinBase/nf-winbase-readdirectorychangesw
 
 #include "win32_gui.hpp"
-
-// bool FuckYourFont(HWND hwnd)
-// {
-// 	// Fix shitty font stuff.
-// 	static HFONT hFont = NULL;
-// 	if (!hFont) {
-// 		NONCLIENTMETRICSW ncMetrics;
-// 		ncMetrics.cbSize = sizeof(ncMetrics);
-// 		if (!SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncMetrics), &ncMetrics, 0))
-// 			return false;
-// 		if (!(hFont = CreateFontIndirectW(&ncMetrics.lfMessageFont)))
-// 			return false;
-// 	}
-
-// 	(void)SendMessage(hwnd, WM_SETFONT, (WPARAM)hFont, TRUE);
-// 	return true;
-// }
-
 #include <gdiplus.h>
 
 namespace win32 {
 
 static Gdiplus::GdiplusStartupInput gdiplusStartupInput;
-static ULONG_PTR gdiplusToken;
-bool GuiInit()
+static ULONG_PTR gdiplusToken = 0;
+static HFONT hMessageFont = NULL;
+
+static bool GuiInit_inner()
 {
+	// Setup the system font to use...
+	NONCLIENTMETRICSW ncMetrics;
+	ncMetrics.cbSize = sizeof(ncMetrics);
+	if (!SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncMetrics), &ncMetrics, 0))
+		return false;
+	if (!(hMessageFont = CreateFontIndirectW(&ncMetrics.lfMessageFont)))
+		return false;
+
 	auto status = Gdiplus::GdiplusStartup(
 		&gdiplusToken,
 		&gdiplusStartupInput,
@@ -50,9 +42,59 @@ bool GuiInit()
 	return true;
 }
 
+bool GuiInit()
+{
+	if (GuiInit_inner())
+		return true;
+	GuiUnInit();
+	return false;
+}
+
 void GuiUnInit()
 {
-	Gdiplus::GdiplusShutdown(gdiplusToken);
+	if (hMessageFont)
+		(void)DeleteObject((HGDIOBJ)hMessageFont);
+	if (gdiplusToken)
+		Gdiplus::GdiplusShutdown(gdiplusToken);
+}
+
+// Use our system font please
+void UseDefaultFont(HWND hwnd)
+{
+	// TODO: Determine if we need to duplicate the font in case someone calls DeleteObject() on it...
+	(void)SendMessage(hwnd, WM_SETFONT, (WPARAM)hMessageFont, TRUE);
+}
+
+static BOOL CALLBACK setFontCallback(HWND hwnd, LPARAM lParam)
+{
+	UseDefaultFont(hwnd);
+	return TRUE;
+}
+
+// https://www.youtube.com/watch?v=73gGwGI8Z7E
+void UseDefaultFontWithChildren(HWND hwnd)
+{
+	UseDefaultFont(hwnd);
+	(void)EnumChildWindows(hwnd, setFontCallback, NULL);
+}
+
+int RunMessageLoop(pDoDispatch cb, void * user_data)
+{
+	MSG msg;
+	BOOL bRet;
+	while ((bRet = GetMessageW(&msg, NULL, 0, 0)) != 0)
+	{
+		if (bRet == -1)
+			return -1;
+
+		if (!cb || cb(&msg, user_data))
+		{
+			TranslateMessage(&msg);
+			DispatchMessageW(&msg);
+		}
+	}
+
+	return (int)msg.wParam;
 }
 
 // WM_GETMINMAXINFO
