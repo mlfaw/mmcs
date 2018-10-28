@@ -24,6 +24,8 @@ public:
 	bool Init(HWND hParent);
 
 	bool Append(const wchar_t * text);
+
+	void Remove(int idx);
 };
 
 }

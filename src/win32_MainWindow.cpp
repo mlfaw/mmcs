@@ -53,7 +53,7 @@ void MainWindow::WmCommand(HWND hwnd, int id, HWND hwndCtrl, UINT codeNotify)
 			if (idx == -1)
 				break;
 			tabbar_.right_click_idx_ = -1;
-			TabCtrl_DeleteItem(tabbar_.hwnd_, idx);
+			tabbar_.Remove(idx);
 			break;
 		}
 		case IDM_FILE_OPEN_FILES:

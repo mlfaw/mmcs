@@ -59,5 +59,19 @@ bool Tabbar::Append(const wchar_t * text)
 	return -1 != TabCtrl_InsertItem(hwnd_, TabCtrl_GetItemCount(hwnd_), &tie);
 }
 
+void Tabbar::Remove(int idx)
+{
+	int sel = TabCtrl_GetCurSel(hwnd_);
+	TabCtrl_DeleteItem(hwnd_, idx);
+	int count = TabCtrl_GetItemCount(hwnd_);
+	if (sel == idx && count)
+	{
+		// keep the same index because i prefer the same index over the previous tab...
+
+		if (count == sel) --sel; // if we were the last-tab, make sure we select the new last-tab
+		TabCtrl_SetCurSel(hwnd_, sel);
+	}
+}
+
 }
 
