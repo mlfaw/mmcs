@@ -27,7 +27,7 @@ public:
 
 	void Remove(int idx);
 
-	static LRESULT SubProc(
+	static LRESULT CALLBACK SubProc(
 		HWND hwnd,
 		UINT uMsg,
 		WPARAM wParam,

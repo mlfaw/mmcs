@@ -76,7 +76,7 @@ void Tabbar::Remove(int idx)
 	}
 }
 
-LRESULT Tabbar::SubProc(
+LRESULT CALLBACK Tabbar::SubProc(
 	HWND hwnd,
 	UINT uMsg,
 	WPARAM wParam,
@@ -85,7 +85,11 @@ LRESULT Tabbar::SubProc(
 	DWORD_PTR dwRefData
 )
 {
-	Tabbar * tabbar = (Tabbar *)dwRefData;
+	if (uMsg == WM_NCDESTROY)
+	{
+		RemoveWindowSubclass(hwnd, SubProc, 0);
+		goto def;
+	}
 
 	if (uMsg == WM_MBUTTONUP)
 	{
@@ -104,7 +108,7 @@ LRESULT Tabbar::SubProc(
 		if (idx == -1)
 			goto def;
 
-		tabbar->Remove(idx);
+		((Tabbar *)dwRefData)->Remove(idx);
 		return 0;
 	}
 
