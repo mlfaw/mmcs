@@ -26,6 +26,15 @@ public:
 	bool Append(const wchar_t * text);
 
 	void Remove(int idx);
+
+	static LRESULT SubProc(
+		HWND hwnd,
+		UINT uMsg,
+		WPARAM wParam,
+		LPARAM lParam,
+		UINT_PTR uIdSubclass,
+		DWORD_PTR dwRefData
+	);
 };
 
 }
