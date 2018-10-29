@@ -127,8 +127,6 @@ LRESULT MainWindow::WmNotify(HWND hwnd, int ctrlId, NMHDR * info)
 {
 	switch (info->code)
 	{
-	default:
-		return 0;
 	case TCN_SELCHANGING:
 		return FALSE; // FALSE to allow changing
 	case TCN_SELCHANGE:
@@ -169,6 +167,8 @@ LRESULT MainWindow::WmNotify(HWND hwnd, int ctrlId, NMHDR * info)
 		return 1;
 	}
 	}
+
+	return 0;
 }
 
 BOOL MainWindow::WmCreate(HWND hwnd, LPCREATESTRUCT cs)
@@ -368,24 +368,35 @@ LRESULT CALLBACK MainWindow::WndProc(
 		return DefWindowProcW(hwnd, uMsg, wParam, lParam);
 	}
 
-	auto this_ = (MainWindow *)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+	auto mw = (MainWindow *)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
 
 	switch (uMsg)
 	{
-		HANDLE_MSG(hwnd, WM_COMMAND,    this_->WmCommand);
-		HANDLE_MSG(hwnd, WM_CREATE,     this_->WmCreate);
-		HANDLE_MSG(hwnd, WM_CLOSE,      this_->WmClose);
-		HANDLE_MSG(hwnd, WM_DROPFILES,  this_->WmDropFiles);
-		HANDLE_MSG(hwnd, WM_SHOWWINDOW, this_->WmShowWindow);
-		HANDLE_MSG(hwnd, WM_ENDSESSION, this_->WmEndSession);
-		HANDLE_MSG(hwnd, WM_DESTROY,    this_->WmDestroy);
-		//HANDLE_MSG(hwnd, WM_PAINT,      this_->WmPaint);
-		HANDLE_MSG(hwnd, WM_SIZE,       this_->WmSize);
-		HANDLE_MSG(hwnd, WM_MOUSEWHEEL, this_->WmMouseWheel);
-		HANDLE_MSG(hwnd, WM_NOTIFY,     this_->WmNotify);
+		HANDLE_MSG(hwnd, WM_COMMAND,    mw->WmCommand);
+		HANDLE_MSG(hwnd, WM_CREATE,     mw->WmCreate);
+		HANDLE_MSG(hwnd, WM_CLOSE,      mw->WmClose);
+		HANDLE_MSG(hwnd, WM_DROPFILES,  mw->WmDropFiles);
+		HANDLE_MSG(hwnd, WM_SHOWWINDOW, mw->WmShowWindow);
+		HANDLE_MSG(hwnd, WM_ENDSESSION, mw->WmEndSession);
+		HANDLE_MSG(hwnd, WM_DESTROY,    mw->WmDestroy);
+		//HANDLE_MSG(hwnd, WM_PAINT,      mw->WmPaint);
+		HANDLE_MSG(hwnd, WM_SIZE,       mw->WmSize);
+		HANDLE_MSG(hwnd, WM_MOUSEWHEEL, mw->WmMouseWheel);
+		HANDLE_MSG(hwnd, WM_NOTIFY,     mw->WmNotify);
 	}
 
 	return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+}
+
+bool MainWindow::DoDispatchCheck(MSG * msg, void * user_data)
+{
+	auto mw = (MainWindow *)user_data;
+	return !TranslateAcceleratorW(mw->hwnd_, mw->accel_, msg);
+}
+
+int MainWindow::Run()
+{
+	return win32::RunMessageLoop(MainWindow::DoDispatchCheck, (void *)this);
 }
 
 HACCEL MainWindow::CreateAccelerators()
@@ -450,9 +461,7 @@ bool MainWindow::Init(int w, int h, int x, int y, bool maximize)
 	wc.lpszMenuName = MAKEINTRESOURCEW(IDM_MAIN_MENU);
 	wc.lpszClassName = L"MainWindow";
 	wc.hIconSm = NULL; // If NULL, it will try to get a smaller icon from hIcon
-
-	ATOM atom = RegisterClassExW(&wc);
-	if (!atom)
+	if (!RegisterClassExW(&wc))
 		return false;
 
 	if (!(accel_ = CreateAccelerators()))
@@ -460,7 +469,7 @@ bool MainWindow::Init(int w, int h, int x, int y, bool maximize)
 
 	hwnd_ = CreateWindowExW(
 		WS_EX_ACCEPTFILES,
-		(LPCWSTR)atom,
+		L"MainWindow",
 		L"MMCS by mlfaw",
 		WS_OVERLAPPEDWINDOW,
 		x,

@@ -87,7 +87,10 @@ LRESULT CALLBACK Tabbar::SubProc(
 {
 	if (uMsg == WM_NCDESTROY)
 	{
-		RemoveWindowSubclass(hwnd, SubProc, 0);
+		HMENU x = ((Tabbar *)dwRefData)->context_menu_root_;
+		if (x)
+			(void)DestroyMenu(x);
+		(void)RemoveWindowSubclass(hwnd, SubProc, 0);
 		goto def;
 	}
 

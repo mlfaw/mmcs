@@ -78,14 +78,6 @@ err:
 	return false;
 }
 
-#ifdef MMCS_WIN32
-static bool cbDoDispatch(MSG * msg, void * user_data)
-{
-	auto mw = (win32::MainWindow *)user_data;
-	return !TranslateAcceleratorW(mw->hwnd_, mw->accel_, msg);
-}
-#endif
-
 static int main_inner(int argc, oschar ** argv)
 {
 	//#if MMCS_WIN32
@@ -148,7 +140,7 @@ static int main_inner(int argc, oschar ** argv)
 	win32::MainWindow mw;
 	if (!mw.Init(600, 400, CW_USEDEFAULT, CW_USEDEFAULT, false))
 		return 1;
-	int ret = win32::RunMessageLoop(cbDoDispatch, &mw);
+	int ret = mw.Run();
 
 	win32::GuiUnInit();
 
