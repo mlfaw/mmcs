@@ -51,6 +51,7 @@ void MainWindow::WmCommand(HWND hwnd, int id, HWND hwndCtrl, UINT codeNotify)
 		{
 			int idx = tabbar_.right_click_idx_;
 			if (idx == -1)
+				// Coming from Ctrl+W if invalid right_click_idx_
 				if (-1 == (idx = TabCtrl_GetCurSel(tabbar_.hwnd_)))
 					break;
 			tabbar_.right_click_idx_ = -1;
