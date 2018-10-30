@@ -456,12 +456,12 @@ static void IpWmMouseWheel(HWND hwnd, int xPos, int yPos, int zDelta, UINT fwKey
 
 static LRESULT CALLBACK IpWindowProc(
 	HWND hwnd,
-	UINT uMsg,
+	UINT msg,
 	WPARAM wParam,
 	LPARAM lParam
 )
 {
-	switch (uMsg)
+	switch (msg)
 	{
 		HANDLE_MSG(hwnd, WM_CREATE, IpWmCreate);
 		HANDLE_MSG(hwnd, WM_DESTROY, IpWmDestroy);
@@ -477,7 +477,7 @@ static LRESULT CALLBACK IpWindowProc(
 		frames = 0;
 		return 0;
 	}
-	return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+	return DefWindowProcW(hwnd, msg, wParam, lParam);
 }
 
 bool ImagePainter_Create(HWND hParent)

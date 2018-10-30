@@ -76,48 +76,73 @@ void Tabbar::Remove(int idx)
 	}
 }
 
+HDWP Tabbar::DeferSize(HDWP hdwp, int cx, int cy)
+{
+	hdwp = DeferWindowPos(
+		hdwp,
+		hwnd_,
+		NULL, // hWndInsertAfter
+		0, // x
+		0, // y
+		cx,
+		cy,
+		SWP_NOZORDER
+	);
+
+	if (!hdwp)
+		return NULL;
+
+
+	return hdwp;
+}
+
+int Tabbar::TabUnderMouse()
+{
+	POINT point;
+
+	if (!GetCursorPos(&point))
+		return -1;
+
+	if (!ScreenToClient(hwnd_, &point))
+		return -1;
+
+	TCHITTESTINFO hittest;
+	hittest.pt = point;
+	return TabCtrl_HitTest(hwnd_, &hittest);
+}
+
 LRESULT CALLBACK Tabbar::SubProc(
 	HWND hwnd,
-	UINT uMsg,
+	UINT msg,
 	WPARAM wParam,
 	LPARAM lParam,
 	UINT_PTR uIdSubclass,
 	DWORD_PTR dwRefData
 )
 {
-	if (uMsg == WM_NCDESTROY)
+	Tabbar * tabbar = (Tabbar *)dwRefData;
+	if (msg == WM_NCDESTROY)
 	{
-		HMENU x = ((Tabbar *)dwRefData)->context_menu_root_;
+		HMENU x = tabbar->context_menu_root_;
 		if (x)
 			(void)DestroyMenu(x);
 		(void)RemoveWindowSubclass(hwnd, SubProc, 0);
 		goto def;
 	}
 
-	if (uMsg == WM_MBUTTONUP)
+	if (msg == WM_MBUTTONUP)
 	{
-		POINT point;
-
-		if (!GetCursorPos(&point))
-			goto def;
-
-		if (!ScreenToClient(hwnd, &point))
-			goto def;
-
-		TCHITTESTINFO hittest;
-		hittest.pt = point;
-		int idx = TabCtrl_HitTest(hwnd, &hittest);
-
+		int idx = tabbar->TabUnderMouse();
 		if (idx == -1)
 			goto def;
 
-		((Tabbar *)dwRefData)->Remove(idx);
+		tabbar->Remove(idx);
 		return 0;
 	}
 
 	// tab scrolling is currently broken
 #if 0
-	if (uMsg != WM_MOUSEWHEEL && uMsg != WM_MOUSEHWHEEL)
+	if (msg != WM_MOUSEWHEEL && msg != WM_MOUSEHWHEEL)
 		goto def;
 
 	HWND buttons = GetDlgItem(hwnd, 1); // the UpDown buttons... msctls_updown32
@@ -136,7 +161,7 @@ LRESULT CALLBACK Tabbar::SubProc(
 #endif
 
 def:
-	return DefSubclassProc(hwnd, uMsg, wParam, lParam);
+	return DefSubclassProc(hwnd, msg, wParam, lParam);
 }
 
 }

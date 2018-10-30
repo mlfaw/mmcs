@@ -79,6 +79,8 @@ Misc notes:
 - ~~APPNOTE.TXT - .ZIP File Format Specification~~
 - PhAddLayoutItem(&LayoutManager, GetDlgItem(hwndDlg, IDCANCEL), NULL, PH_ANCHOR_BOTTOM | PH_ANCHOR_RIGHT);
 - ListViewSample.cpp
+- Search \*chan archive with media hash (base64 of raw md5 hash bytes)
+- Create Window in main thread. Open database and load previous session in new thread & pass results to main thread.
 
 Currently used libraries:
 - SQLite 3.25.2 - statically linked

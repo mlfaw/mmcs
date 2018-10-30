@@ -8,7 +8,7 @@
 #define ID_STATUS_BAR                 302
 #define IDM_FILE_NEW_TAB              303
 #define IDM_FILE_OPEN_FILES           304
-#define IDM_FILE_OPEN_FOLDERS         305
+#define IDM_FILE_OPEN_DIRS            305
 #define IDM_FILE_EXIT                 306
 #define IDM_EDIT_TEST                 307
 #define IDM_VIEW_TOGGLE_DARK_MODE     308

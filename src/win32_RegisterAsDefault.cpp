@@ -20,14 +20,14 @@ static struct registerData userSpecified;
 
 static INT_PTR CALLBACK DialogProc(
 	_In_ HWND   hwnd,
-	_In_ UINT   uMsg,
+	_In_ UINT   msg,
 	_In_ WPARAM wParam,
 	_In_ LPARAM lParam
 )
 {
 	HICON hIcon;
 	struct registerData * d;
-	switch (uMsg) {
+	switch (msg) {
 	case WM_INITDIALOG:
 		hIcon = (HICON)LoadImageW(
 			GetModuleHandle(NULL),

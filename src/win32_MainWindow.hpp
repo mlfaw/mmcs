@@ -64,7 +64,7 @@ public:
 
 	static LRESULT CALLBACK WndProc(
 		HWND hwnd,
-		UINT uMsg,
+		UINT msg,
 		WPARAM wParam,
 		LPARAM lParam
 	);

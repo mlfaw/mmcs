@@ -51,16 +51,17 @@ void MainWindow::WmCommand(HWND hwnd, int id, HWND hwndCtrl, UINT codeNotify)
 		{
 			int idx = tabbar_.right_click_idx_;
 			if (idx == -1)
-				break;
+				if (-1 == (idx = TabCtrl_GetCurSel(tabbar_.hwnd_)))
+					break;
 			tabbar_.right_click_idx_ = -1;
 			tabbar_.Remove(idx);
 			break;
 		}
 		case IDM_FILE_OPEN_FILES:
-		case IDM_FILE_OPEN_FOLDERS:
+		case IDM_FILE_OPEN_DIRS:
 		{
 			std::vector<osstring> * results;
-			bool foldersOnly = id == IDM_FILE_OPEN_FOLDERS;
+			bool foldersOnly = id == IDM_FILE_OPEN_DIRS;
 			if (mmcs::SelectFilesWindow(&results, foldersOnly, true))
 			{
 				for (const auto & x : *results)
@@ -135,34 +136,26 @@ LRESULT MainWindow::WmNotify(HWND hwnd, int ctrlId, NMHDR * info)
 	{
 		// return non-zero to process ourselves instead of it passing up to MainWindow's WM_CONTEXTMENU.
 
-		POINT point;
-
-		if (!GetCursorPos(&point))
-			return 1;
-
-		int popupX = point.x;
-		int popupY = point.y;
-
-		if (!ScreenToClient(info->hwndFrom, &point))
-			return 1;
-
-		TCHITTESTINFO hittest;
-		hittest.pt = point;
-		int idx = TabCtrl_HitTest(info->hwndFrom, &hittest);
-
+		int idx = tabbar_.TabUnderMouse();
 		if (idx == -1)
+			return 1;
+
+		POINT point;
+		if (!GetCursorPos(&point))
 			return 1;
 	
 		tabbar_.right_click_idx_ = idx;
-		TrackPopupMenu(
+		BOOL ret = TrackPopupMenu(
 			tabbar_.context_menu_,
-			0, // flags
-			popupX,
-			popupY,
+			TPM_RETURNCMD, // flags
+			point.x,
+			point.y,
 			0, // reserved
 			hwnd,
 			NULL // prcRect
 		);
+
+		if (!ret) tabbar_.right_click_idx_ = -1;
 
 		return 1;
 	}
@@ -326,19 +319,13 @@ void MainWindow::WmPaint(HWND hwnd)
 
 void MainWindow::WmSize(HWND hwnd, UINT state, int cx, int cy)
 {
+	// TODO: Call tabbar_->OnSize(hdwp, cx, cy);
+	//       Inside tabbar_->OnSize(), call tabpage_->OnSize(hdwp, ax, ay);
+
 	HDWP hdwp = BeginDeferWindowPos(5);
-	if (!hdwp) return; // TODO: Log error?
-	hdwp = DeferWindowPos(
-		hdwp,
-		tabbar_.hwnd_,
-		NULL, // hWndInsertAfter
-		0, // x
-		0, // y
-		cx,
-		cy,
-		SWP_NOZORDER
-	);
-	if (!hdwp) return;
+
+	if (!(hdwp = tabbar_.DeferSize(hdwp, cx, cy)))
+		return;
 
 	(void)EndDeferWindowPos(hdwp);
 }
@@ -350,27 +337,36 @@ void MainWindow::WmMouseWheel(HWND hwnd, int xPos, int yPos, int zDelta, UINT fw
 		return;
 
 
+
+	RECT rc;
+	GetClientRect(tabbar_.hwnd_, &rc);
+	TabCtrl_AdjustRect(tabbar_.hwnd_, FALSE, &rc);
+
+	if (1)
+		MessageBoxA(NULL, "test", "test", 0);
+
+	return;
 }
 
 LRESULT CALLBACK MainWindow::WndProc(
 	HWND hwnd,
-	UINT uMsg,
+	UINT msg,
 	WPARAM wParam,
 	LPARAM lParam
 )
 {
-	if (uMsg == WM_NCCREATE)
+	if (msg == WM_NCCREATE)
 	{
 		SetLastError(0);
 		SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)(((LPCREATESTRUCTW)lParam)->lpCreateParams));
 		if (GetLastError())
 			return FALSE;
-		return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+		return DefWindowProcW(hwnd, msg, wParam, lParam);
 	}
 
 	auto mw = (MainWindow *)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
 
-	switch (uMsg)
+	switch (msg)
 	{
 		HANDLE_MSG(hwnd, WM_COMMAND,    mw->WmCommand);
 		HANDLE_MSG(hwnd, WM_CREATE,     mw->WmCreate);
@@ -385,7 +381,7 @@ LRESULT CALLBACK MainWindow::WndProc(
 		HANDLE_MSG(hwnd, WM_NOTIFY,     mw->WmNotify);
 	}
 
-	return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+	return DefWindowProcW(hwnd, msg, wParam, lParam);
 }
 
 bool MainWindow::DoDispatchCheck(MSG * msg, void * user_data)
@@ -414,6 +410,11 @@ HACCEL MainWindow::CreateAccelerators()
 			FCONTROL | FVIRTKEY,
 			0x54, // T
 			IDM_FILE_NEW_TAB
+		},
+		{ // Ctrl+w = Close Tab
+			FCONTROL | FVIRTKEY,
+			0x57, // W
+			IDM_CLOSE_TAB
 		},
 	};
 

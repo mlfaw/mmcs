@@ -27,9 +27,13 @@ public:
 
 	void Remove(int idx);
 
+	HDWP DeferSize(HDWP hdwp, int cx, int cy);
+
+	int TabUnderMouse();
+
 	static LRESULT CALLBACK SubProc(
 		HWND hwnd,
-		UINT uMsg,
+		UINT msg,
 		WPARAM wParam,
 		LPARAM lParam,
 		UINT_PTR uIdSubclass,
