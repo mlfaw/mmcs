@@ -9,9 +9,9 @@ namespace mmcs {
 //const unsigned char ASYNC_FILE = 4;
 
 void OpenUrlSync(const char * url);
-//void OpenUrlAsync(const char * url, bool free);
+bool OpenUrlAsync(const char * url, bool FreeAfter);
 
 void OpenFileSync(const oschar * url);
-//void OpenFileAsync(const oschar * url, bool free);
+bool OpenFileAsync(const oschar * url, bool FreeAfter);
 
 }

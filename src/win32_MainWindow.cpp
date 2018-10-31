@@ -94,10 +94,10 @@ void MainWindow::WmCommand(HWND hwnd, int id, HWND hwndCtrl, UINT codeNotify)
 			break;
 		}
 		case IDM_HELP_WEBSITE:
-			mmcs::OpenUrlSync("https://mlfaw.com/mmcs");
+			mmcs::OpenUrlAsync("https://mlfaw.com/mmcs", false);
 			break;
 		case IDM_HELP_GITHUB:
-			mmcs::OpenUrlSync("https://github.com/mlfaw/mmcs");
+			mmcs::OpenUrlAsync("https://github.com/mlfaw/mmcs", false);
 			break;
 		case IDM_HELP_CHANGELOG:
 		{
@@ -108,8 +108,8 @@ void MainWindow::WmCommand(HWND hwnd, int id, HWND hwndCtrl, UINT codeNotify)
 				return;
 			osstrcpy(changelogpath, mmcs::ExeDir);
 			osstrcat(changelogpath, changelogtxt);
-			mmcs::OpenFileSync(changelogpath);
-			free(changelogpath);
+			if (!mmcs::OpenFileAsync(changelogpath, true))
+				free(changelogpath);
 			break;
 		}
 		case IDM_HELP_REGISTER_AS_DEFAULT:

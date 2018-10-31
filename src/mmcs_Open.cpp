@@ -4,10 +4,32 @@
 #include <Windows.h> // ShellExecuteA(), ShellExecuteW()
 #elif MMCS_LINUX
 #include <unistd.h> // fork(), execvp()
-#include <stdlib.h> // exit()
+#include <stdlib.h> // exit(), free()
 #endif
 
 namespace mmcs {
+
+#if MMCS_WIN32
+void CALLBACK worker_OpenUrl_NoFree(PTP_CALLBACK_INSTANCE instance, PVOID pv)
+{
+	OpenUrlSync((const char *)pv);
+}
+void CALLBACK worker_OpenUrl_FreeAfter(PTP_CALLBACK_INSTANCE instance, PVOID pv)
+{
+	worker_OpenUrl_NoFree(instance, pv);
+	free(pv);
+}
+
+void CALLBACK worker_OpenFile_NoFree(PTP_CALLBACK_INSTANCE instance, PVOID pv)
+{
+	OpenFileSync((const oschar *)pv);
+}
+void CALLBACK worker_OpenFile_FreeAfter(PTP_CALLBACK_INSTANCE instance, PVOID pv)
+{
+	worker_OpenFile_NoFree(instance, pv);
+	free(pv);
+}
+#endif
 
 void OpenUrlSync(const char * url)
 {
@@ -22,6 +44,20 @@ void OpenUrlSync(const char * url)
 #endif
 }
 
+bool OpenUrlAsync(const char * url, bool FreeAfter)
+{
+#if MMCS_WIN32
+	PTP_SIMPLE_CALLBACK cb = FreeAfter ?
+		  worker_OpenUrl_FreeAfter
+		: worker_OpenUrl_NoFree;
+	if (TrySubmitThreadpoolCallback(cb, (PVOID)url, NULL)) // NULL for process's default thread-pool
+		return true;
+#else
+
+#endif
+	return false;
+}
+
 void OpenFileSync(const oschar * file)
 {
 #if MMCS_WIN32
@@ -30,6 +66,20 @@ void OpenFileSync(const oschar * file)
 	// xdg-open acts on both files and urls
 	OpenUrlSync(file);
 #endif
+}
+
+bool OpenFileAsync(const oschar * file, bool FreeAfter)
+{
+#if MMCS_WIN32
+	PTP_SIMPLE_CALLBACK cb = FreeAfter ?
+		  worker_OpenFile_FreeAfter
+		: worker_OpenFile_NoFree;
+	if (TrySubmitThreadpoolCallback(cb, (PVOID)file, NULL)) // NULL for process's default thread-pool
+		return true;
+#else
+
+#endif
+	return false;
 }
 
 }
