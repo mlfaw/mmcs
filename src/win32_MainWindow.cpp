@@ -297,6 +297,8 @@ void MainWindow::WmSize(HWND hwnd, UINT state, int cx, int cy)
 	//       Inside tabbar_->OnSize(), call tabpage_->OnSize(hdwp, ax, ay);
 
 	HDWP hdwp = BeginDeferWindowPos(5);
+	if (!hdwp)
+		return;
 
 	if (!(hdwp = tabbar_.DeferSize(hdwp, cx, cy)))
 		return;
