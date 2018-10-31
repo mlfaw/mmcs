@@ -12,6 +12,7 @@ public:
 	HMENU context_menu_;
 	int right_click_idx_;
 	bool right_click_down_;
+	bool middle_button_down_;
 
 public:
 

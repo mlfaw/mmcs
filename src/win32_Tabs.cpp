@@ -134,8 +134,15 @@ LRESULT CALLBACK Tabbar::SubProc(
 		(void)RemoveWindowSubclass(hwnd, SubProc, 0);
 		break;
 	}
+	case WM_MBUTTONDOWN:
+		 tabbar->middle_button_down_ = true;
+		 return 0;
 	case WM_MBUTTONUP:
 	{
+		if (!tabbar->middle_button_down_)
+			break;
+		tabbar->middle_button_down_ = false;
+
 		int idx = tabbar->TabUnderMouse(NULL);
 		if (idx == -1)
 			break;
