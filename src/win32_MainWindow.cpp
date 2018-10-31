@@ -133,33 +133,6 @@ LRESULT MainWindow::WmNotify(HWND hwnd, int ctrlId, NMHDR * info)
 		return FALSE; // FALSE to allow changing
 	case TCN_SELCHANGE:
 		return 0; // return value doesn't matter
-	case NM_RCLICK:
-	{
-		// return non-zero to process ourselves instead of it passing up to MainWindow's WM_CONTEXTMENU.
-
-		int idx = tabbar_.TabUnderMouse();
-		if (idx == -1)
-			return 1;
-
-		POINT point;
-		if (!GetCursorPos(&point))
-			return 1;
-	
-		tabbar_.right_click_idx_ = idx;
-		BOOL ret = TrackPopupMenu(
-			tabbar_.context_menu_,
-			TPM_RETURNCMD, // flags
-			point.x,
-			point.y,
-			0, // reserved
-			hwnd,
-			NULL // prcRect
-		);
-
-		if (!ret) tabbar_.right_click_idx_ = -1;
-
-		return 1;
-	}
 	}
 
 	return 0;
@@ -487,7 +460,8 @@ bool MainWindow::Init(int w, int h, int x, int y, bool maximize)
 	if (!hwnd_)
 		goto err;
 
-	win32::UseDefaultFontWithChildren(hwnd_);
+	//win32::UseDefaultFontWithChildren(hwnd_);
+	win32::UseDefaultFont(tabbar_.hwnd_);
 
 	(void)ShowWindow(hwnd_, maximize ? SW_SHOWMAXIMIZED : SW_SHOW);
 	(void)UpdateWindow(hwnd_);

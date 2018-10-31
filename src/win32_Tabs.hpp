@@ -11,12 +11,14 @@ public:
 	HMENU context_menu_root_;
 	HMENU context_menu_;
 	int right_click_idx_;
+	bool right_click_down_;
 
 public:
 
 	Tabbar() :
 		hwnd_(NULL),
-		right_click_idx_(-1)
+		right_click_idx_(-1),
+		right_click_down_(false)
 	{
 		// hi
 	}

@@ -20,6 +20,7 @@ namespace win32 {
 static Gdiplus::GdiplusStartupInput gdiplusStartupInput;
 static ULONG_PTR gdiplusToken = 0;
 static HFONT hMessageFont = NULL;
+static LOGFONTW messageFont;
 
 static bool GuiInit_inner()
 {
@@ -28,8 +29,7 @@ static bool GuiInit_inner()
 	ncMetrics.cbSize = sizeof(ncMetrics);
 	if (!SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncMetrics), &ncMetrics, 0))
 		return false;
-	if (!(hMessageFont = CreateFontIndirectW(&ncMetrics.lfMessageFont)))
-		return false;
+	messageFont = ncMetrics.lfMessageFont;
 
 	auto status = Gdiplus::GdiplusStartup(
 		&gdiplusToken,
@@ -52,8 +52,6 @@ bool GuiInit()
 
 void GuiUnInit()
 {
-	if (hMessageFont)
-		(void)DeleteObject((HGDIOBJ)hMessageFont);
 	if (gdiplusToken)
 		Gdiplus::GdiplusShutdown(gdiplusToken);
 }
@@ -61,8 +59,9 @@ void GuiUnInit()
 // Use our system font please
 void UseDefaultFont(HWND hwnd)
 {
-	// TODO: Determine if we need to duplicate the font in case someone calls DeleteObject() on it...
-	(void)SendMessage(hwnd, WM_SETFONT, (WPARAM)hMessageFont, TRUE);
+	HFONT hMessageFont = CreateFontIndirectW(&messageFont);
+	if (hMessageFont)
+		(void)SendMessage(hwnd, WM_SETFONT, (WPARAM)hMessageFont, TRUE);
 }
 
 static BOOL CALLBACK setFontCallback(HWND hwnd, LPARAM lParam)

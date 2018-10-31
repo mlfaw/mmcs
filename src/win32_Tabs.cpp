@@ -121,23 +121,61 @@ LRESULT CALLBACK Tabbar::SubProc(
 )
 {
 	Tabbar * tabbar = (Tabbar *)dwRefData;
-	if (msg == WM_NCDESTROY)
+
+	switch (msg)
+	{
+	case WM_NCDESTROY:
 	{
 		HMENU x = tabbar->context_menu_root_;
 		if (x)
 			(void)DestroyMenu(x);
 		(void)RemoveWindowSubclass(hwnd, SubProc, 0);
-		goto def;
+		break;
 	}
-
-	if (msg == WM_MBUTTONUP)
+	case WM_MBUTTONUP:
 	{
 		int idx = tabbar->TabUnderMouse();
 		if (idx == -1)
-			goto def;
+			break;
 
 		tabbar->Remove(idx);
 		return 0;
+	}
+	case WM_RBUTTONDOWN:
+		tabbar->right_click_down_ = true;
+		return 0;
+	case WM_RBUTTONUP:
+	{
+		// I want to keep tab handling here instead of using NM_RCLICK in MainWindow...
+		if (!tabbar->right_click_down_)
+			break;
+		tabbar->right_click_down_ = false;
+
+		int idx = tabbar->TabUnderMouse();
+		if (idx == -1)
+			break;
+
+		POINT point;
+		if (!GetCursorPos(&point))
+			break;
+	
+		tabbar->right_click_idx_ = idx;
+
+		auto x = DefWindowProcW;
+
+		BOOL ret = TrackPopupMenu(
+			tabbar->context_menu_,
+			0, // flags
+			point.x,
+			point.y,
+			0, // reserved
+			GetParent(hwnd),
+			NULL // prcRect
+		);
+
+		if (!ret) tabbar->right_click_idx_ = -1;
+		return 0;
+	}
 	}
 
 	// tab scrolling is currently broken
@@ -160,7 +198,6 @@ LRESULT CALLBACK Tabbar::SubProc(
 	}
 #endif
 
-def:
 	return DefSubclassProc(hwnd, msg, wParam, lParam);
 }
 
