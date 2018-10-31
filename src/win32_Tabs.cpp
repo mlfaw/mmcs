@@ -109,7 +109,7 @@ int Tabbar::TabUnderMouse(POINT * out)
 	TCHITTESTINFO hittest;
 	hittest.pt = point;
 	int idx = TabCtrl_HitTest(hwnd_, &hittest);
-	if (idx != -1) *out = point;
+	if (idx != -1 && out) *out = point;
 	return idx;
 }
 
