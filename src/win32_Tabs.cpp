@@ -160,8 +160,6 @@ LRESULT CALLBACK Tabbar::SubProc(
 	
 		tabbar->right_click_idx_ = idx;
 
-		auto x = DefWindowProcW;
-
 		BOOL ret = TrackPopupMenu(
 			tabbar->context_menu_,
 			0, // flags
