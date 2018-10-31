@@ -31,7 +31,7 @@ public:
 
 	HDWP DeferSize(HDWP hdwp, int cx, int cy);
 
-	int TabUnderMouse();
+	int TabUnderMouse(POINT * out);
 
 	static LRESULT CALLBACK SubProc(
 		HWND hwnd,

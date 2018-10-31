@@ -96,7 +96,7 @@ HDWP Tabbar::DeferSize(HDWP hdwp, int cx, int cy)
 	return hdwp;
 }
 
-int Tabbar::TabUnderMouse()
+int Tabbar::TabUnderMouse(POINT * out)
 {
 	POINT point;
 
@@ -108,7 +108,9 @@ int Tabbar::TabUnderMouse()
 
 	TCHITTESTINFO hittest;
 	hittest.pt = point;
-	return TabCtrl_HitTest(hwnd_, &hittest);
+	int idx = TabCtrl_HitTest(hwnd_, &hittest);
+	if (idx != -1) *out = point;
+	return idx;
 }
 
 LRESULT CALLBACK Tabbar::SubProc(
@@ -134,7 +136,7 @@ LRESULT CALLBACK Tabbar::SubProc(
 	}
 	case WM_MBUTTONUP:
 	{
-		int idx = tabbar->TabUnderMouse();
+		int idx = tabbar->TabUnderMouse(NULL);
 		if (idx == -1)
 			break;
 
@@ -151,12 +153,9 @@ LRESULT CALLBACK Tabbar::SubProc(
 			break;
 		tabbar->right_click_down_ = false;
 
-		int idx = tabbar->TabUnderMouse();
-		if (idx == -1)
-			break;
-
 		POINT point;
-		if (!GetCursorPos(&point))
+		int idx = tabbar->TabUnderMouse(&point);
+		if (idx == -1)
 			break;
 	
 		tabbar->right_click_idx_ = idx;
