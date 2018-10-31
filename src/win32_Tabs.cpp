@@ -5,6 +5,7 @@
 #include <CommCtrl.h>
 #include <windowsx.h>
 #include "win32_gui.hpp"
+#include "win32_TabPage.hpp"
 
 namespace win32 {
 
@@ -13,7 +14,8 @@ bool Tabbar::Init(HWND hParent)
 	HINSTANCE hInstance = HINST_THISCOMPONENT;
 	RECT rc;
 
-	GetClientRect(hParent, &rc);
+	if (!GetClientRect(hParent, &rc))
+		return false;
 
 	hwnd_ = CreateWindowExW(
 		0,
@@ -43,6 +45,13 @@ bool Tabbar::Init(HWND hParent)
 
 	if (!Append(L"files(1)"))
 		goto err;
+
+	RECT rc2 = {};
+	GetClientRect(hwnd_, &rc2);
+	TabCtrl_AdjustRect(hwnd_, FALSE, &rc2);
+
+	if (!win32::CreateTagPage(hParent, rc2.left, rc2.top, rc2.right - rc2.left, rc2.bottom - rc2.top))
+		return false;
 
 	return true;
 
@@ -78,20 +87,6 @@ void Tabbar::Remove(int idx)
 
 HDWP Tabbar::DeferSize(HDWP hdwp, int cx, int cy)
 {
-	hdwp = DeferWindowPos(
-		hdwp,
-		hwnd_,
-		NULL, // hWndInsertAfter
-		0, // x
-		0, // y
-		cx,
-		cy,
-		SWP_NOZORDER
-	);
-
-	if (!hdwp)
-		return NULL;
-
 
 	return hdwp;
 }

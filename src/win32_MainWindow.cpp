@@ -297,11 +297,44 @@ void MainWindow::WmSize(HWND hwnd, UINT state, int cx, int cy)
 	//       Inside tabbar_->OnSize(), call tabpage_->OnSize(hdwp, ax, ay);
 
 	HDWP hdwp = BeginDeferWindowPos(5);
-	if (!hdwp)
-		return;
+	if (!hdwp) return;
 
-	if (!(hdwp = tabbar_.DeferSize(hdwp, cx, cy)))
-		return;
+	hdwp = DeferWindowPos(
+		hdwp,
+		tabbar_.hwnd_,
+		NULL, // hWndInsertAfter
+		0, // x
+		0, // y
+		cx,
+		cy,
+		SWP_NOZORDER
+	);
+
+	if (!hdwp) return;
+
+	HWND tabpage = GetDlgItem(hwnd_, ID_TAB_PAGE);
+	if (tabpage)
+	{
+		RECT rc2;
+		rc2.left = 0;
+		rc2.top = 0;
+		rc2.right = cx;
+		rc2.bottom = cy;
+		TabCtrl_AdjustRect(tabbar_.hwnd_, FALSE, &rc2);
+
+		hdwp = DeferWindowPos(
+			hdwp,
+			tabpage,
+			NULL, // hWndInsertAfter
+			rc2.left, // x
+			rc2.top, // y
+			rc2.right - rc2.left,
+			rc2.bottom - rc2.top,
+			SWP_NOZORDER
+		);
+
+		if (!hdwp) return;
+	}
 
 	(void)EndDeferWindowPos(hdwp);
 }
@@ -312,14 +345,6 @@ void MainWindow::WmMouseWheel(HWND hwnd, int xPos, int yPos, int zDelta, UINT fw
 	if (fitted_)
 		return;
 
-
-
-	RECT rc;
-	GetClientRect(tabbar_.hwnd_, &rc);
-	TabCtrl_AdjustRect(tabbar_.hwnd_, FALSE, &rc);
-
-	if (1)
-		MessageBoxA(NULL, "test", "test", 0);
 
 	return;
 }

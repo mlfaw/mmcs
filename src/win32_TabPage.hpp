@@ -3,9 +3,8 @@
 #include <Windows.h>
 #include <windowsx.h>
 
-LRESULT CALLBACK TabPageWndProc(
-	HWND hwnd,
-	UINT uMsg,
-	WPARAM wParam,
-	LPARAM lParam
-);
+namespace win32 {
+
+HWND CreateTagPage(HWND hParent, int x, int y, int w, int h);
+
+}

@@ -35,6 +35,7 @@
 #define ID_IMAGEPAINTER            327
 #define IDM_TAB_MENU               328
 #define IDM_CLOSE_TAB              329
+#define ID_TAB_PAGE                330
 
 
 #define VER_COMPANYNAME_STR      "mlfaw"
