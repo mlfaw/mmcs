@@ -175,27 +175,27 @@ LRESULT CALLBACK Tabbar::SubProc(
 		if (!ret) tabbar->right_click_idx_ = -1;
 		return 0;
 	}
-	}
-
-	// tab scrolling is currently broken
-#if 0
-	if (msg != WM_MOUSEWHEEL && msg != WM_MOUSEHWHEEL)
-		goto def;
-
-	HWND buttons = GetDlgItem(hwnd, 1); // the UpDown buttons... msctls_updown32
-	if (!buttons)
-		goto def;
-	short delta = GET_WHEEL_DELTA_WPARAM(wParam);
-	if (delta == 0)
-		goto def;
-
-	if (delta)
+	case WM_MOUSEWHEEL:
+	case WM_MOUSEHWHEEL:
 	{
-		WPARAM x = (WPARAM)((1 << 16) | SB_THUMBPOSITION);
-		SendMessageW(hwnd, WM_HSCROLL, x, (LPARAM)buttons);
-		SendMessageW(hwnd, WM_HSCROLL, (WPARAM)SB_ENDSCROLL, (LPARAM)buttons);
+		HWND updown = GetDlgItem(hwnd, 1); // the UpDown buttons... msctls_updown32
+		if (!updown) break;
+		short delta = GET_WHEEL_DELTA_WPARAM(wParam);
+		if (delta == 0) break;
+		// invert the hscroll so it works how you'd expect
+		if (msg == WM_MOUSEHWHEEL) delta = -delta;
+		// save previous capture because updown will internally set it...
+		HWND prev = SetCapture(updown);
+		// delta > 0 = up
+		// delta < 0 = down
+		// updown control has up on the left (0 to w/2) and down on the right (w/2 or greater)
+		// ... so lets use values that are definitely in those ranges...
+		LPARAM x = delta > 0 ? 0 : 9999;
+		SendMessageW(updown, WM_LBUTTONDOWN, 0, x);
+		SetCapture(prev);
+		return 0;
 	}
-#endif
+	}
 
 	return DefSubclassProc(hwnd, msg, wParam, lParam);
 }
