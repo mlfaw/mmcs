@@ -58,6 +58,8 @@ public:
 
 	void WmPaint(HWND hwnd);
 
+	void WmWindowPosChanged(HWND hwnd, const LPWINDOWPOS lpwpos);
+
 	void WmSize(HWND hwnd, UINT state, int cx, int cy);
 
 	void WmMouseWheel(HWND hwnd, int xPos, int yPos, int zDelta, UINT fwKeys);

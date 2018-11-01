@@ -291,6 +291,40 @@ void MainWindow::WmPaint(HWND hwnd)
 	(void)EndPaint(hwnd, &ps);
 }
 
+#ifndef SWP_STATECHANGED
+#define SWP_STATECHANGED 0x8000
+#endif
+#ifndef SWP_NOCLIENTSIZE
+#define SWP_NOCLIENTSIZE 0x0800
+#endif
+#ifndef SWP_NOCLIENTMOVE
+#define SWP_NOCLIENTMOVE 0x1000
+#endif
+
+void MainWindow::WmWindowPosChanged(HWND hwnd, const LPWINDOWPOS pos)
+{
+	LONG_PTR style = GetWindowLongPtrW(hwnd, GWL_STYLE);
+	if (!style) return;
+
+	if ((pos->flags & SWP_STATECHANGED) || !(pos->flags & SWP_NOCLIENTSIZE))
+	//if (!(pos->flags & SWP_NOSIZE))
+	{
+		RECT rc;
+		if (!GetClientRect(hwnd, &rc)) return;
+
+		UINT state;
+		if (style & WS_MINIMIZE)
+			state = SIZE_MINIMIZED;
+		else if (style & WS_MAXIMIZE)
+			state = SIZE_MAXIMIZED;
+		else
+			state = SIZE_RESTORED;
+
+		WmSize(hwnd, state, rc.right, rc.bottom);
+	}
+}
+
+// TODO: 
 void MainWindow::WmSize(HWND hwnd, UINT state, int cx, int cy)
 {
 	// TODO: Call tabbar_->OnSize(hdwp, cx, cy);
@@ -377,7 +411,8 @@ LRESULT CALLBACK MainWindow::WndProc(
 		HANDLE_MSG(hwnd, WM_ENDSESSION, mw->WmEndSession);
 		HANDLE_MSG(hwnd, WM_DESTROY,    mw->WmDestroy);
 		//HANDLE_MSG(hwnd, WM_PAINT,      mw->WmPaint);
-		HANDLE_MSG(hwnd, WM_SIZE,       mw->WmSize);
+		HANDLE_MSG(hwnd, WM_WINDOWPOSCHANGED, mw->WmWindowPosChanged);
+		//HANDLE_MSG(hwnd, WM_SIZE,       mw->WmSize); // handled in WmWindowPosChanged()
 		HANDLE_MSG(hwnd, WM_MOUSEWHEEL, mw->WmMouseWheel);
 		HANDLE_MSG(hwnd, WM_NOTIFY,     mw->WmNotify);
 	}
