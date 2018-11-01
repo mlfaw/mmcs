@@ -180,6 +180,8 @@ LRESULT CALLBACK Tabbar::SubProc(
 	{
 		HWND updown = GetDlgItem(hwnd, 1); // the UpDown buttons... msctls_updown32
 		if (!updown) break;
+		RECT rc;
+		if (!GetClientRect(updown, &rc)) break;
 		short delta = GET_WHEEL_DELTA_WPARAM(wParam);
 		if (delta == 0) break;
 		// invert the hscroll so it works how you'd expect
@@ -190,7 +192,7 @@ LRESULT CALLBACK Tabbar::SubProc(
 		// delta < 0 = down
 		// updown control has up on the left (0 to w/2) and down on the right (w/2 or greater)
 		// ... so lets use values that are definitely in those ranges...
-		LPARAM x = delta > 0 ? 0 : 9999;
+		LPARAM x = delta > 0 ? 0 : rc.right-1;
 		SendMessageW(updown, WM_LBUTTONDOWN, 0, x);
 		SetCapture(prev);
 		return 0;
