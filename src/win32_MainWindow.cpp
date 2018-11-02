@@ -523,7 +523,6 @@ bool MainWindow::Init(int w, int h, int x, int y, bool maximize)
 		goto err;
 
 	//win32::UseDefaultFontWithChildren(hwnd_);
-	win32::UseDefaultFont(tabbar_.hwnd_);
 
 	(void)ShowWindow(hwnd_, maximize ? SW_SHOWMAXIMIZED : SW_SHOW);
 	(void)UpdateWindow(hwnd_);

@@ -35,6 +35,8 @@ bool Tabbar::Init(HWND hParent)
 	if (!hwnd_)
 		return false;
 
+	win32::UseDefaultFont(hwnd_);
+
 	context_menu_root_ = LoadMenuW(hInstance, MAKEINTRESOURCEW(IDM_TAB_MENU));
 	if (!context_menu_root_)
 		goto err;
