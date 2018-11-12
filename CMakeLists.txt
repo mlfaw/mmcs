@@ -86,7 +86,7 @@ else()
 	set(__BUILD_TYPE_PREFIX "")
 endif()
 
-set(CURL_SOURCE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/curl-7.61.1")
+set(CURL_SOURCE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/curl-7.62.0")
 set(CURL_BUILD_DIR "${CMAKE_BINARY_DIR}/curl/src/curl-build")
 if (CMAKE_BUILD_TYPE MATCHES Debug)
 	set(CURL_LIB_POSTFIX "-d")
