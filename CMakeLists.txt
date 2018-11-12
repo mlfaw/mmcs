@@ -69,7 +69,6 @@ if (WIN32)
 		"${GEN_FOLDER}/win32_resource.rc"
 		"${GEN_FOLDER}/win32.manifest"
 	)
-	add_definitions()
 	configure_file(src/gen_win32_resource.in.h  "${GEN_FOLDER}/win32_resource.h")
 	configure_file(src/gen_win32_resource.in.rc "${GEN_FOLDER}/win32_resource.rc")
 	configure_file(src/gen_win32.in.manifest    "${GEN_FOLDER}/win32.manifest")
