@@ -17,8 +17,6 @@ osfile simpleOpen(const oschar * fileName, const char * flags);
 
 osfile simpleRelativeOpen(osfile dir, const oschar * fileName, const char * flags);
 
-bool isValid(osfile f);
-
 bool isDirectory(osfile f);
 
 bool getSize(osfile f, uint64_t * outsize);
