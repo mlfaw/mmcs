@@ -9,29 +9,23 @@
 #endif
 
 namespace mmcs {
+namespace file {
 
-class File {
-public:
-	File();
-	// Opens in read-mode.
-	File(const oschar * fileName, const char * flags = "r");
-	~File();
+void close(osfile f);
 
-	bool isValid();
+osfile simpleOpen(const oschar * fileName, const char * flags);
 
-	bool isDirectory();
+osfile simpleRelativeOpen(osfile dir, const oschar * fileName, const char * flags);
 
-	static File Invalid();
-	static File openContainingDirectory(const oschar * fileName, const char * flags = "r");
+bool isValid(osfile f);
 
-	bool getSize(uint64_t * outsize);
+bool isDirectory(osfile f);
 
-	bool myRead(void * buf, uint32_t size);
+bool getSize(osfile f, uint64_t * outsize);
 
-	bool slurp(void ** outbuf, uint32_t * outsize);
+bool simpleRead(osfile f, void * buf, uint32_t size);
 
-public:
-	osfile handle_;
-};
+bool slurp(osfile f, void ** outbuf, uint32_t * outsize);
 
+}
 } // namespace mmcs

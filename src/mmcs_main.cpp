@@ -13,6 +13,7 @@
 
 #include "mmcs_os.hpp"
 #include "mmcs_globals.hpp"
+#include "mmcs_file.hpp"
 #include "mmcs_NativeMessaging.hpp"
 #include <string.h> // strrchr()/wcsrchr()
 #include <stdlib.h> // malloc(), free()
@@ -22,7 +23,7 @@
 #include <shellapi.h> // CommandLineToArgvW()
 #include <Objbase.h> // CoInitializeEx()
 #include <winnt.h> // NtCurrentTeb()
-#include <winternl.h> // PTEB, PPEB, NtCreateFile()
+#include <winternl.h> // PTEB, PPEB
 #include "win32_RegisterAsDefault.hpp"
 #include "win32_MainWindow.hpp"
 #include "win32_gui.hpp"
@@ -80,53 +81,24 @@ err:
 
 static int main_inner(int argc, oschar ** argv)
 {
-	//#if MMCS_WIN32
-	//	UNICODE_STRING us;
-	//	RtlInitUnicodeString(&us, L"mmcs_portable.txt");
-	//	OBJECT_ATTRIBUTES objattr;
-	//	InitializeObjectAttributes(
-	//		&objattr,
-	//		&us,
-	//		OBJ_CASE_INSENSITIVE,
-	//		curdir,
-	//		NULL // security descriptor... use default
-	//	);
-	//	HANDLE hPortable;
-	//	IO_STATUS_BLOCK statusblock;
-	//	NTSTATUS ntstatus = NtCreateFile(
-	//		&hPortable,
-	//		FILE_GENERIC_READ,
-	//		&objattr,
-	//		&statusblock,
-	//		0,
-	//		FILE_ATTRIBUTE_NORMAL,
-	//		FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-	//		FILE_OPEN,
-	//		0, // CreateOptions
-	//		NULL, // EaBuffer
-	//		0 // EaLength
-	//	);
-	//	if (!NT_SUCCESS(ntstatus)) {
-	//		if (statusblock.Information != FILE_DOES_NOT_EXIST)
-	//			return 1; // TODO: Log error?
-	//		mmcs::isPortable = false;
-	//	} else {
-	//		mmcs::isPortable = true;
-	//	}
-	//#else
-	//
-	//#endif
-
+	osfile hExeDir = mmcs::file::simpleOpen(mmcs::ExeDir, "rd");
+	if (hExeDir != (osfile)-1) {
+		osfile hPortable = mmcs::file::simpleRelativeOpen(hExeDir, _OS("mmcs_portable.txt"), "r");
+		if (hPortable == (osfile)-1) {
+			mmcs::isPortable = false;
+		} else {
+			mmcs::isPortable = true;
+			mmcs::file::close(hPortable);
+		}
+		mmcs::file::close(hExeDir);
+	} else {
 #if MMCS_WIN32
-	mmcs::isPortable =
-		GetFileAttributesW(portable_filename) != INVALID_FILE_ATTRIBUTES;
+		return 1; // TODO: this ain't good...
 #else
-	mmcs::isPortable =
-		access(portable_filename, F_OK) != -1;
+		// TODO: is setting portable to false okay?
+		mmcs::isPortable = false;
 #endif
-
-	// TODO: Disable eventually
-	mmcs::isPortable = true;
+	}
 
 	if (mmcs::NativeMessaging_IsMode(argc, argv)) {
 		// TODO: Figure out how portable will interact with this...
@@ -153,64 +125,12 @@ static int main_inner(int argc, oschar ** argv)
 #endif
 }
 
+#if 0
 #include <tls.h>
 #define CURL_STATICLIB
 #include <curl/curl.h>
+#endif
 
-#include <stdio.h>
-//#include <stdlib.h>
-static size_t write_callback(char *ptr, size_t size, size_t nmemb, void *userdata)
-{
-	//size_t total_bytes = size * nmemb;
-	//printf("bytes = %llu\n", nmemb*size);
-	fwrite(ptr, size, nmemb, stdout);
-	return size * nmemb;
-}
-
-static size_t header_callback(char *buffer, size_t size, size_t nitems, void *userdata)
-{
-	fwrite(buffer, size, nitems, stdout);
-	return size * nitems;
-}
-
-bool curl_test()
-{
-	bool success = false;
-
-	if (tls_init())
-		return false;
-
-	if (true) return true;
-
-	CURLcode res;
-	CURL *curl = curl_easy_init();
-	if (!curl)
-		return false;
-
-	if (curl_easy_setopt(curl, CURLOPT_URL, "https://www.google.com/"))
-		goto out;
-	// TODO: figure out cert.pem / ca-bundle.crt with LibreSSL & CURL
-	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
-	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0);
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)1);
-	curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, header_callback);
-	curl_easy_setopt(curl, CURLOPT_HEADERDATA, (void *)1);
-
-	AllocConsole();
-	FILE *fp;
-	freopen_s(&fp, "CONOUT$", "w", stdout);
-	res = curl_easy_perform(curl);
-	fclose(fp);
-	FreeConsole();
-	success = (res == CURLE_OK);
-
-out:
-	curl_easy_cleanup(curl);
-	return success;
-}
-
-#include "mmcs_GetDirectoryFiles.hpp"
 #include <vector>
 #include <string>
 int main(int argc, oschar ** argv)
@@ -223,30 +143,6 @@ int main(int argc, oschar ** argv)
 
 	if (!get_exe_and_dir(&mmcs::ExePath, &mmcs::ExeDir))
 		return 1; // TODO: log
-
-	std::vector<osstring> * files;
-	HANDLE hDir = CreateFileW(
-		L"C:\\",
-		GENERIC_READ,
-		FILE_SHARE_READ | FILE_SHARE_WRITE,
-		NULL,
-		OPEN_EXISTING,
-		FILE_FLAG_BACKUP_SEMANTICS,
-		NULL
-	);
-	if (!mmcs::GetDirectoryFilesFromHandle(&files, hDir))
-	{
-
-	}
-
-	{
-		if (curl_global_init(CURL_GLOBAL_ALL))
-			return 1;
-		bool success = curl_test();
-		curl_global_cleanup();
-		if (!success)
-			return 1;
-	}
 
 	int ret = main_inner(argc, argv);
 
