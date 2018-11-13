@@ -49,6 +49,12 @@ list(APPEND mmcs_sources
 	#"src/small_zip.h"
 )
 
+# TODO: https://www.sqlite.org/compile.html
+add_definitions(
+	# if the load extension is ever to be used though then Linux needs the dl lib
+	-DSQLITE_OMIT_LOAD_EXTENSION=1
+)
+
 if (WIN32)
 	add_definitions(
 		-DMMCS_MSW=1
@@ -76,6 +82,10 @@ if (WIN32)
 	configure_file("${CMAKE_SOURCE_DIR}/resources/mmcs.ico" "${GEN_FOLDER}/mmcs.ico" COPYONLY)
 
 	list(APPEND mmcs_libs Comctl32 WS2_32 ntdll gdiplus)
+else()
+	set(THREADS_PREFER_PTHREAD_FLAG ON)
+	find_package(Threads REQUIRED)
+	list(APPEND mmcs_libs Threads::Threads)
 endif()
 
 include(ExternalProject)
