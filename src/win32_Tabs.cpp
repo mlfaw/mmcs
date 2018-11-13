@@ -13,6 +13,7 @@ bool Tabbar::Init(HWND hParent)
 {
 	HINSTANCE hInstance = HINST_THISCOMPONENT;
 	RECT rc;
+	RECT rc2 = {};
 
 	if (!GetClientRect(hParent, &rc))
 		return false;
@@ -48,7 +49,6 @@ bool Tabbar::Init(HWND hParent)
 	if (!Append(L"files(1)"))
 		goto err;
 
-	RECT rc2 = {};
 	GetClientRect(hwnd_, &rc2);
 	TabCtrl_AdjustRect(hwnd_, FALSE, &rc2);
 
