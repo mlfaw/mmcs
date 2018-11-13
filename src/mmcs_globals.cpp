@@ -1,6 +1,7 @@
 /*{REPLACEMEWITHLICENSE}*/
 #include "mmcs_globals.hpp"
 #include "msw_misc.hpp"
+#include <stddef.h> // NULL...
 
 namespace mmcs {
 

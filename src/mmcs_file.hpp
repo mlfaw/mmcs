@@ -11,7 +11,7 @@
 namespace mmcs {
 namespace file {
 
-void close(osfile f);
+void closeFile(osfile f);
 
 /* options for `flags`:
 generic:

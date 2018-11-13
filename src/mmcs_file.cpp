@@ -1,5 +1,6 @@
 /*{REPLACEMEWITHLICENSE}*/
 #include "mmcs_file.hpp"
+#include <string.h> // strchr()
 
 #if MMCS_WIN32
 //#include <shlwapi.h>
@@ -8,12 +9,13 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <fcntl.h> // open()
 #endif
 
 namespace mmcs {
 namespace file {
 
-void close(osfile f)
+void closeFile(osfile f)
 {
 #if MMCS_WIN32
 	(void)CloseHandle(f);
@@ -129,7 +131,7 @@ osfile simpleOpen(const oschar * fileName, const char * flags) // TODO: default 
 	);
 #else
 	int oflags, mode;
-	if (!parse_flags_posix(&oflags, mode))
+	if (!parse_flags_posix(flags, &oflags, &mode))
 		return -1;
 	return open(fileName, oflags, mode);
 #endif
@@ -205,7 +207,7 @@ osfile simpleRelativeOpen(osfile dir, const oschar * fileName, const char * flag
 	return hFile;
 #else
 	int oflags, mode;
-	if (!parse_flags_posix(&oflags, mode))
+	if (!parse_flags_posix(flags, &oflags, &mode))
 		return -1;
 	return openat(dir, fileName, oflags, mode);
 #endif

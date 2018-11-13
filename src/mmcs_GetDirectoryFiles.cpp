@@ -42,6 +42,7 @@ namespace mmcs {
 bool GetDirectoryFilesFromHandle(std::vector<osstring> ** results, osfile in_hDir)
 {
 	bool success = false;
+#if MMCS_WIN32
 	std::vector<osstring> * files = NULL;
 	HANDLE hDir;
 
@@ -131,6 +132,9 @@ out:
 		*results = files;
 	else if (files)
 		delete files;
+#else
+
+#endif
 	return success;
 }
 

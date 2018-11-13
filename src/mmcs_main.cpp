@@ -17,6 +17,7 @@
 #include "mmcs_NativeMessaging.hpp"
 #include <string.h> // strrchr()/wcsrchr()
 #include <stdlib.h> // malloc(), free()
+#include <stddef.h> // ptrdiff_t
 
 #if MMCS_WIN32
 #include <Windows.h>
@@ -41,30 +42,43 @@ static bool get_exe_and_dir(oschar ** exe_out, oschar ** dir_out)
 {
 	oschar * exe = NULL;
 	oschar * dir = NULL;
+	oschar * rchr;
+	ptrdiff_t nChars;
 
 #if MMCS_WIN32
+	oschar * bs; // backslash
+
 	exe = _wcsdup(
 		NtCurrentTeb()->ProcessEnvironmentBlock->ProcessParameters->ImagePathName.Buffer
 	);
 	if (!exe) goto err;
 #else
+	ssize_t nbytes;
 	// TODO whenever needed:
 	// https://stackoverflow.com/questions/1023306/finding-current-executables-path-without-proc-self-exe
 	struct stat s;
-	if (lstat("/proc/self/exe", &s) == -1) goto err;
-	exe = (oschar *)malloc(s.st_size + 1);
-	auto nbytes = readlink("/proc/self/exe", exe, s.st_size);
+	ssize_t lsize;
+	if (lstat("/proc/self/exe", &s) == -1) return false;
+	lsize = s.st_size ? s.st_size : PATH_MAX;
+	exe = (oschar *)malloc(lsize + 1);
+	if (!exe) return false;
+	nbytes = readlink("/proc/self/exe", exe, lsize);
 	if (nbytes == -1) goto err;
 	exe[nbytes] = 0;
+	if (s.st_size == 0) { // resize buffer from PATH_MAX
+		char * x = (char *)realloc(exe, nbytes+1);
+		if (!x) goto err;
+		exe = x;
+	}
 #endif
 
-	oschar * rchr = osstrrchr(exe, _OS('/'));
+	rchr = osstrrchr(exe, _OS('/'));
 #if MMCS_WIN32
-	oschar * bs = osstrrchr(exe, _OS('\\'));
+	bs = osstrrchr(exe, _OS('\\'));
 	rchr = (rchr > bs) ? rchr : bs;
 #endif
 	if (!rchr) goto err; // nice
-	auto nChars = rchr - exe;
+	nChars = rchr - exe;
 	dir = (oschar *)malloc((nChars + 1) * sizeof(oschar));
 	if (!dir) goto err; // double nice
 	memcpy(dir, exe, nChars * sizeof(oschar));
@@ -75,7 +89,6 @@ static bool get_exe_and_dir(oschar ** exe_out, oschar ** dir_out)
 
 err:
 	free(exe);
-	free(dir);
 	return false;
 }
 
@@ -88,9 +101,9 @@ static int main_inner(int argc, oschar ** argv)
 			mmcs::isPortable = false;
 		} else {
 			mmcs::isPortable = true;
-			mmcs::file::close(hPortable);
+			mmcs::file::closeFile(hPortable);
 		}
-		mmcs::file::close(hExeDir);
+		mmcs::file::closeFile(hExeDir);
 	} else {
 #if MMCS_WIN32
 		return 1; // TODO: this ain't good...
@@ -121,7 +134,7 @@ static int main_inner(int argc, oschar ** argv)
 
 	return ret;
 #else
-
+	return 0;
 #endif
 }
 
@@ -131,8 +144,6 @@ static int main_inner(int argc, oschar ** argv)
 #include <curl/curl.h>
 #endif
 
-#include <vector>
-#include <string>
 int main(int argc, oschar ** argv)
 {
 	// global variables in commandline.hpp/cpp
@@ -219,6 +230,9 @@ int CALLBACK wWinMain(
 
 	// Some uninit
 	CoUninitialize(); // unnecessary but I'll keep it...
+
+	if (argv != fake_argv)
+		(void)LocalFree((HLOCAL)argv);
 
 	return ret;
 }
