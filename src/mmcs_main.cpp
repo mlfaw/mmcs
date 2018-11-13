@@ -81,9 +81,9 @@ err:
 
 static int main_inner(int argc, oschar ** argv)
 {
-	osfile hExeDir = mmcs::file::simpleOpen(mmcs::ExeDir, "rd");
+	osfile hExeDir = mmcs::file::simpleOpen(mmcs::ExeDir, "rdP");
 	if (hExeDir != (osfile)-1) {
-		osfile hPortable = mmcs::file::simpleRelativeOpen(hExeDir, _OS("mmcs_portable.txt"), "r");
+		osfile hPortable = mmcs::file::simpleRelativeOpen(hExeDir, _OS("mmcs_portable.txt"), "rM");
 		if (hPortable == (osfile)-1) {
 			mmcs::isPortable = false;
 		} else {

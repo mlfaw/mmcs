@@ -32,15 +32,34 @@ static bool parse_flags_win32(
 )
 {
 	DWORD access = 0;
-	DWORD shareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
+	DWORD shareMode = 0;
 	DWORD creationDisposition = OPEN_EXISTING;
-	DWORD flagsAndAttr = FILE_ATTRIBUTE_NORMAL;
-	if (strchr(in_flags, 'r'))
-		access |= GENERIC_READ;
-	if (strchr(in_flags, 'w'))
-		access |= GENERIC_WRITE;
-	if (strchr(in_flags, 'd'))
-		flagsAndAttr |= FILE_FLAG_BACKUP_SEMANTICS;
+	DWORD flagsAndAttr = 0;
+	bool create = false; // open is default...
+	bool always = false;
+
+	if (strchr(in_flags, 'r')) access |= GENERIC_READ;
+	if (strchr(in_flags, 'w')) access |= GENERIC_WRITE;
+	if (strchr(in_flags, 'd')) flagsAndAttr |= FILE_FLAG_BACKUP_SEMANTICS;
+	if (strchr(in_flags, 'o')) create = false;
+	if (strchr(in_flags, 'c')) create = true;
+	if (strchr(in_flags, 'y')) always = true;
+	if (strchr(in_flags, 'M')) access = 0;
+	if (strchr(in_flags, 'V')) flagsAndAttr |= FILE_FLAG_OVERLAPPED;
+	if (strchr(in_flags, 'R')) shareMode |= FILE_SHARE_READ;
+	if (strchr(in_flags, 'W')) shareMode |= FILE_SHARE_WRITE;
+	if (strchr(in_flags, 'D')) shareMode |= FILE_SHARE_DELETE;
+	if (strchr(in_flags, 'S')) flagsAndAttr |= FILE_FLAG_SEQUENTIAL_SCAN;
+
+	if (flagsAndAttr == 0) flagsAndAttr = FILE_ATTRIBUTE_NORMAL;
+	if (shareMode == 0) shareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
+
+	if (create && always)
+		creationDisposition = CREATE_ALWAYS;
+	else if (create)
+		creationDisposition = CREATE_NEW;
+	else if (always)
+		creationDisposition = OPEN_ALWAYS;
 
 	// Directories can only be created with CreateDirectory.... or with NtCreateFile(FILE_DIRECTORY_FILE)...
 	// TODO: deal with this I guess....
@@ -60,14 +79,33 @@ static bool parse_flags_posix(
 	int * out_mode
 )
 {
-	int flags = 0;
+	int flags = O_CLOEXEC;
 	int mode = 0;
+	bool create = false;
+	bool always = false;
+
 	if (strchr(in_flags, 'r') && strchr(in_flags, 'w'))
-		flags = O_RDWR;
+		flags |= O_RDWR;
 	else if (strchr(in_flags, 'r'))
-		flags = O_RDONLY;
+		flags |= O_RDONLY;
 	else if (strchr(in_flags, 'w'))
-		flags = O_WRONLY;
+		flags |= O_WRONLY;
+
+	if (strchr(in_flags, 'd')) flags |= O_DIRECTORY;
+	if (strchr(in_flags, 'o')) create = false;
+	if (strchr(in_flags, 'c')) create = true;
+	if (strchr(in_flags, 'y')) always = true;
+	if (strchr(in_flags, 'M')) flags |= O_PATH;
+	if (strchr(in_flags, 'X')) flags &= O_CLOEXEC; // remove the flag...
+	if (strchr(in_flags, 'P')) flags |= O_PATH;
+
+	if (create && always)
+		flags |= O_CREAT | O_TRUNC;
+	else if (create)
+		flags |= O_CREAT | O_EXCL;
+	else if (always)
+		flags |= O_CREAT;
+
 	*out_flags = flags;
 	*out_mode = mode;
 	return true;
@@ -119,13 +157,16 @@ osfile simpleRelativeOpen(osfile dir, const oschar * fileName, const char * flag
 		return INVALID_HANDLE_VALUE;
 
 	DWORD attr = 0;
-	// TODO: handle attr
-
 	DWORD createOptions = 0;
-	if (flagsAndAttr & FILE_FLAG_BACKUP_SEMANTICS)
+	if (flagsAndAttr & FILE_FLAG_BACKUP_SEMANTICS) {
 		createOptions |= FILE_DIRECTORY_FILE;
-	else
+		attr |= FILE_ATTRIBUTE_DIRECTORY;
+	} else {
 		createOptions |= FILE_NON_DIRECTORY_FILE;
+		attr |= FILE_ATTRIBUTE_NORMAL;
+	}
+	if (flagsAndAttr & FILE_FLAG_SEQUENTIAL_SCAN) createOptions |= FILE_SEQUENTIAL_ONLY;
+	if (flagsAndAttr & FILE_FLAG_OVERLAPPED) createOptions |= FILE_SYNCHRONOUS_IO_NONALERT;
 	
 	UNICODE_STRING us;
 	RtlInitUnicodeString(&us, fileName);
