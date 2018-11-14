@@ -101,8 +101,8 @@ void MainWindow::WmCommand(HWND hwnd, int id, HWND hwndCtrl, UINT codeNotify)
 			break;
 		case IDM_HELP_CHANGELOG:
 		{
-			const oschar * const changelogtxt = _OS("/changelog.txt");
-			auto len = osstrlen(mmcs::ExeDir) + osstrlen(changelogtxt) + 1;
+			const oschar changelogtxt[] = _OS("/changelog.txt");
+			auto len = osstrlen(mmcs::ExeDir) + sizeof(changelogtxt);
 			oschar * changelogpath = (oschar *)malloc(len * sizeof(oschar));
 			if (!changelogpath)
 				return;
