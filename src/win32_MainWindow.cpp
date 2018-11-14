@@ -401,20 +401,23 @@ LRESULT CALLBACK MainWindow::WndProc(
 
 	auto mw = (MainWindow *)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
 
-	switch (msg)
+	if (mw)
 	{
-		HANDLE_MSG(hwnd, WM_COMMAND,    mw->WmCommand);
-		HANDLE_MSG(hwnd, WM_CREATE,     mw->WmCreate);
-		HANDLE_MSG(hwnd, WM_CLOSE,      mw->WmClose);
-		HANDLE_MSG(hwnd, WM_DROPFILES,  mw->WmDropFiles);
-		HANDLE_MSG(hwnd, WM_SHOWWINDOW, mw->WmShowWindow);
-		HANDLE_MSG(hwnd, WM_ENDSESSION, mw->WmEndSession);
-		HANDLE_MSG(hwnd, WM_DESTROY,    mw->WmDestroy);
-		//HANDLE_MSG(hwnd, WM_PAINT,      mw->WmPaint);
-		HANDLE_MSG(hwnd, WM_WINDOWPOSCHANGED, mw->WmWindowPosChanged);
-		//HANDLE_MSG(hwnd, WM_SIZE,       mw->WmSize); // handled in WmWindowPosChanged()
-		HANDLE_MSG(hwnd, WM_MOUSEWHEEL, mw->WmMouseWheel);
-		HANDLE_MSG(hwnd, WM_NOTIFY,     mw->WmNotify);
+		switch (msg)
+		{
+			HANDLE_MSG(hwnd, WM_COMMAND,    mw->WmCommand);
+			HANDLE_MSG(hwnd, WM_CREATE,     mw->WmCreate);
+			HANDLE_MSG(hwnd, WM_CLOSE,      mw->WmClose);
+			HANDLE_MSG(hwnd, WM_DROPFILES,  mw->WmDropFiles);
+			HANDLE_MSG(hwnd, WM_SHOWWINDOW, mw->WmShowWindow);
+			HANDLE_MSG(hwnd, WM_ENDSESSION, mw->WmEndSession);
+			HANDLE_MSG(hwnd, WM_DESTROY,    mw->WmDestroy);
+			//HANDLE_MSG(hwnd, WM_PAINT,      mw->WmPaint);
+			HANDLE_MSG(hwnd, WM_WINDOWPOSCHANGED, mw->WmWindowPosChanged);
+			//HANDLE_MSG(hwnd, WM_SIZE,       mw->WmSize); // handled in WmWindowPosChanged()
+			HANDLE_MSG(hwnd, WM_MOUSEWHEEL, mw->WmMouseWheel);
+			HANDLE_MSG(hwnd, WM_NOTIFY,     mw->WmNotify);
+		}
 	}
 
 	return DefWindowProcW(hwnd, msg, wParam, lParam);
