@@ -2,7 +2,7 @@
 #pragma once
 #include "mmcs_os.hpp"
 
-#if MMCS_WIN32
+#ifdef _WIN32
 #include <Windows.h>
 #endif
 
@@ -15,7 +15,7 @@ extern bool isPortable;
 extern oschar * ExePath;
 extern oschar * ExeDir;
 
-#if MMCS_WIN32
+#ifdef _WIN32
 //extern HINSTANCE hInstance;
 //extern wchar_t ExePath[];
 //extern wchar_t * ExePath;

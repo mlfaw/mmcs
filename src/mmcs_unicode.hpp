@@ -5,7 +5,7 @@
 
 // UTF16_CHAR_TYPE & UTF16_STRING_TYPE are used to work around a Visual Studio bug with std::u16string.
 // unicode.obj : error LNK2001: unresolved external symbol "__declspec(dllimport) public: static class std::locale::id std::codecvt<char16_t,char,struct _Mbstatet>::id" (__imp_?id@?$codecvt@_SDU_Mbstatet@@@std@@2V0locale@2@A)
-#if MMCS_MSW
+#ifdef _WIN32
 #define UTF16_CHAR_TYPE wchar_t
 #define UTF16_STRING_TYPE std::wstring
 #else

@@ -57,8 +57,6 @@ add_definitions(
 
 if (WIN32)
 	add_definitions(
-		-DMMCS_MSW=1
-		-DMMCS_WIN32=1
 		-D_UNICODE
 		-DUNICODE
 		-D_CRT_SECURE_NO_WARNINGS

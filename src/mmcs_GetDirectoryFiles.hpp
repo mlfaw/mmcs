@@ -3,7 +3,7 @@
 #include "mmcs_os.hpp"
 #include <vector>
 #include <string>
-#ifdef MMCS_WIN32
+#ifdef _WIN32
 #include <Windows.h>
 #endif
 

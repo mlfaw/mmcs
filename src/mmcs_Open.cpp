@@ -1,6 +1,6 @@
 /*{REPLACEMEWITHLICENSE}*/
 #include "mmcs_Open.hpp"
-#if MMCS_WIN32
+#ifdef _WIN32
 #include <Windows.h> // ShellExecuteA(), ShellExecuteW()
 #elif MMCS_LINUX
 #include <unistd.h> // fork(), execvp()
@@ -9,7 +9,7 @@
 
 namespace mmcs {
 
-#if MMCS_WIN32
+#ifdef _WIN32
 void CALLBACK worker_OpenUrl_NoFree(PTP_CALLBACK_INSTANCE instance, PVOID pv)
 {
 	OpenUrlSync((const char *)pv);
@@ -33,7 +33,7 @@ void CALLBACK worker_OpenFile_FreeAfter(PTP_CALLBACK_INSTANCE instance, PVOID pv
 
 void OpenUrlSync(const char * url)
 {
-#if MMCS_WIN32
+#ifdef _WIN32
 	(void)ShellExecuteA(NULL, "open", url, NULL, NULL, SW_SHOWNORMAL);
 #elif MMCS_LINUX
 	const char * xdg_open = "xdg-open";
@@ -46,7 +46,7 @@ void OpenUrlSync(const char * url)
 
 bool OpenUrlAsync(const char * url, bool FreeAfter)
 {
-#if MMCS_WIN32
+#ifdef _WIN32
 	PTP_SIMPLE_CALLBACK cb = FreeAfter ?
 		  worker_OpenUrl_FreeAfter
 		: worker_OpenUrl_NoFree;
@@ -60,7 +60,7 @@ bool OpenUrlAsync(const char * url, bool FreeAfter)
 
 void OpenFileSync(const oschar * file)
 {
-#if MMCS_WIN32
+#ifdef _WIN32
 	(void)ShellExecuteW(NULL, L"open", file, NULL, NULL, SW_SHOWNORMAL);
 #elif MMCS_LINUX
 	// xdg-open acts on both files and urls
@@ -70,7 +70,7 @@ void OpenFileSync(const oschar * file)
 
 bool OpenFileAsync(const oschar * file, bool FreeAfter)
 {
-#if MMCS_WIN32
+#ifdef _WIN32
 	PTP_SIMPLE_CALLBACK cb = FreeAfter ?
 		  worker_OpenFile_FreeAfter
 		: worker_OpenFile_NoFree;

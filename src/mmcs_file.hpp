@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include <stdint.h>
-#if MMCS_MSW
+#ifdef _WIN32
 #include <Windows.h>
 #endif
 

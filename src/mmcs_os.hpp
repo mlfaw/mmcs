@@ -2,7 +2,7 @@
 #pragma once
 
 // oschar and such...
-#if MMCS_MSW
+#ifdef _WIN32
 #define oschar wchar_t
 #define _OS(x) L ## x
 //#define osdirsep '\\'
@@ -29,7 +29,7 @@
 #endif
 
 // file handle/fd type
-#if MMCS_WIN32
+#ifdef _WIN32
 #define osfile HANDLE
 #elif MMCS_UWP
 #define osfile Windows.Storage.StorageFile

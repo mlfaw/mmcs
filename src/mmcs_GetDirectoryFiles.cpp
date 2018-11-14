@@ -1,7 +1,7 @@
 /*{REPLACEMEWITHLICENSE}*/
 #include "mmcs_GetDirectoryFiles.hpp"
 
-#if MMCS_WIN32
+#ifdef _WIN32
 #include <stdlib.h> // malloc(), free()
 #include <string.h> // memcpy()
 #include <Windows.h>
@@ -42,7 +42,7 @@ namespace mmcs {
 bool GetDirectoryFilesFromHandle(std::vector<osstring> ** results, osfile in_hDir)
 {
 	bool success = false;
-#if MMCS_WIN32
+#ifdef _WIN32
 	std::vector<osstring> * files = NULL;
 	HANDLE hDir;
 
@@ -144,7 +144,7 @@ out:
 bool GetDirectoryFiles(std::vector<osstring> ** results, const oschar * dirName)
 {
 	std::vector<osstring> * files = NULL;
-#if MMCS_WIN32
+#ifdef _WIN32
 	// (void)NtQueryDirectoryFile(0, 0, 0, 0, 0, 0, 0, FileDirectoryInformation, 0, 0, 0);
 	auto x = wcslen(dirName);
 	if (!x) return false;

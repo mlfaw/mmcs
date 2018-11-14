@@ -6,7 +6,7 @@
 // TODO: Remove CURL and wrap libtls around an HTTP header parser?
 //       libtls has tls_config_set_ca_mem() which is :ok_hand:
 
-#if MMCS_WIN32
+#ifdef _WIN32
 // This motherfucker is right here at the top before anything can pull in Windows.h
 #include <WinSock2.h>
 #endif
@@ -19,7 +19,7 @@
 #include <stdlib.h> // malloc(), free()
 #include <stddef.h> // ptrdiff_t
 
-#if MMCS_WIN32
+#ifdef _WIN32
 #include <Windows.h>
 #include <shellapi.h> // CommandLineToArgvW()
 #include <Objbase.h> // CoInitializeEx()
@@ -45,7 +45,7 @@ static bool get_exe_and_dir(oschar ** exe_out, oschar ** dir_out)
 	oschar * rchr;
 	ptrdiff_t nChars;
 
-#if MMCS_WIN32
+#ifdef _WIN32
 	oschar * bs; // backslash
 
 	exe = _wcsdup(
@@ -73,7 +73,7 @@ static bool get_exe_and_dir(oschar ** exe_out, oschar ** dir_out)
 #endif
 
 	rchr = osstrrchr(exe, _OS('/'));
-#if MMCS_WIN32
+#ifdef _WIN32
 	bs = osstrrchr(exe, _OS('\\'));
 	rchr = (rchr > bs) ? rchr : bs;
 #endif
@@ -105,7 +105,7 @@ static int main_inner(int argc, oschar ** argv)
 		}
 		mmcs::file::closeFile(hExeDir);
 	} else {
-#if MMCS_WIN32
+#ifdef _WIN32
 		return 1; // TODO: this ain't good...
 #else
 		// TODO: is setting portable to false okay?
@@ -118,7 +118,7 @@ static int main_inner(int argc, oschar ** argv)
 		return mmcs::NativeMessaging_Handler();
 	}
 
-#if MMCS_WIN32
+#ifdef _WIN32
 	if (!win32::GuiInit())
 		return 1;
 
@@ -165,7 +165,7 @@ int main(int argc, oschar ** argv)
 }
 
 
-#if MMCS_WIN32
+#ifdef _WIN32
 // Save the original current-directory then set the current-directory to the system-drive.
 // This is done so a HANDLE to the original current-directory is not kept open.
 // (HANDLE kept open = can't delete directory / eject drive)

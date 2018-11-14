@@ -2,7 +2,7 @@
 #include "mmcs_file.hpp"
 #include <string.h> // strchr()
 
-#if MMCS_WIN32
+#ifdef _WIN32
 //#include <shlwapi.h>
 #include <winternl.h> // NtCreateFile(), RtlInitUnicodeString(), InitializeObjectAttributes()
 #else
@@ -17,14 +17,14 @@ namespace file {
 
 void closeFile(osfile f)
 {
-#if MMCS_WIN32
+#ifdef _WIN32
 	(void)CloseHandle(f);
 #else
 	close(f); // TODO: handle -EINTR....
 #endif
 }
 
-#if MMCS_WIN32
+#ifdef _WIN32
 static bool parse_flags_win32(
 	const char * in_flags,
 	DWORD * out_access,
@@ -116,7 +116,7 @@ static bool parse_flags_posix(
 
 osfile simpleOpen(const oschar * fileName, const char * flags) // TODO: default flags of "r"
 {
-#if MMCS_WIN32
+#ifdef _WIN32
 	DWORD access, shareMode, creationDisposition, flagsAndAttr;
 	if (!parse_flags_win32(flags, &access, &shareMode, &creationDisposition, &flagsAndAttr))
 		return INVALID_HANDLE_VALUE;
@@ -139,7 +139,7 @@ osfile simpleOpen(const oschar * fileName, const char * flags) // TODO: default 
 
 osfile simpleRelativeOpen(osfile dir, const oschar * fileName, const char * flags)
 {
-#if MMCS_WIN32
+#ifdef _WIN32
 	DWORD access, shareMode, creationDisposition, flagsAndAttr;
 	if (!parse_flags_win32(flags, &access, &shareMode, &creationDisposition, &flagsAndAttr))
 		return INVALID_HANDLE_VALUE;
@@ -215,7 +215,7 @@ osfile simpleRelativeOpen(osfile dir, const oschar * fileName, const char * flag
 
 bool isDirectory(osfile f)
 {
-#ifdef MMCS_WIN32
+#ifdef _WIN32
 	BY_HANDLE_FILE_INFORMATION info;
 	BOOL bRes = GetFileInformationByHandle(f, &info);
 	if (!bRes) return false;
@@ -235,7 +235,7 @@ File File::openContainingDirectory(const oschar * fileName, const char * flags)
 	if (!len || len < 3) return File::Invalid(); // TODO: hmm...
 
 	const oschar * lastSeparator = osstrrchr(fileName, _OS('/'));
-#ifdef MMCS_WIN32
+#ifdef _WIN32
 	{
 		const oschar * lastSeparator2 = osstrrchr(fileName, L'\\');
 		if (lastSeparator < lastSeparator2)
@@ -262,7 +262,7 @@ File File::openContainingDirectory(const oschar * fileName, const char * flags)
 
 bool getSize(osfile f, uint64_t * outsize)
 {
-#ifdef MMCS_WIN32
+#ifdef _WIN32
 	LARGE_INTEGER li;
 	if (!GetFileSizeEx(f, &li)) return false;
 	*outsize = (uint64_t)li.QuadPart;
@@ -277,7 +277,7 @@ bool getSize(osfile f, uint64_t * outsize)
 // TODO: Support 64-bit sizes? Who the fuck would be reading 4 GiB files though...
 bool simpleRead(osfile f, void * buf, uint32_t size)
 {
-#ifdef MMCS_WIN32
+#ifdef _WIN32
 	DWORD bytes_read;
 	if (!ReadFile(f, buf, size, &bytes_read, NULL))
 		return false;
