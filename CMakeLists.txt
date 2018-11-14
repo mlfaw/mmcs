@@ -96,7 +96,7 @@ else()
 endif()
 
 set(CURL_SOURCE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/curl-7.62.0")
-set(CURL_BUILD_DIR "${CMAKE_BINARY_DIR}/curl/src/curl-build")
+set(CURL_BUILD_DIR "${CMAKE_BINARY_DIR}/curl/src/curl-build/lib")
 if (CMAKE_BUILD_TYPE MATCHES Debug)
 	set(CURL_LIB_POSTFIX "-d")
 else()
@@ -122,18 +122,20 @@ ExternalProject_Add(
 	SOURCE_DIR "${CURL_SOURCE_DIR}"
 	CMAKE_CACHE_ARGS "${CURL_CMAKE_ARGS}"
 )
+add_library(mylibcurl STATIC IMPORTED)
+set_target_properties(mylibcurl PROPERTIES IMPORTED_LOCATION "${CURL_BUILD_DIR}/${__BUILD_TYPE_PREFIX}libcurl${CURL_LIB_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
 include_directories(
 	"${OPENSSL_INCLUDE_DIR}"
 	"${CURL_SOURCE_DIR}/include"
-	"${CURL_BUILD_DIR}/lib"
+	"${CURL_BUILD_DIR}"
 )
 
 list(APPEND mmcs_libs
 	OpenSSL::Crypto
 	OpenSSL::SSL
 	"${LIBRESSL_TLS_LIBRARY}"
-	"${CURL_BUILD_DIR}/lib/${__BUILD_TYPE_PREFIX}libcurl${CURL_LIB_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}"
+	mylibcurl
 )
 
 # Only executes in cmake's configure step...
@@ -142,5 +144,6 @@ list(APPEND mmcs_libs
 
 #list(FILTER mmcs_sources EXCLUDE REGEX "README\\.md") # bye bye
 add_executable(mmcs WIN32 ${mmcs_sources})
+add_dependencies(mmcs curl) # require the externalproject to be built first
 set_property(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" PROPERTY VS_STARTUP_PROJECT mmcs)
 target_link_libraries(mmcs ${mmcs_libs})
