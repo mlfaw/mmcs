@@ -275,17 +275,15 @@ void MainWindow::WmPaint(HWND hwnd)
 			(double)rc.bottom
 		);
 
-		auto pGraphics = Gdiplus::Graphics::FromHDC(hdc);
+		Gdiplus::Graphics pGraphics(hdc);
 
-		pGraphics->DrawImage(
+		pGraphics.DrawImage(
 			image_,
 			destRect,
 			imgRect,
 			imgUnit,
 			(const Gdiplus::ImageAttributes *)NULL
 		);
-	
-		delete pGraphics;
 	}
 
 	(void)EndPaint(hwnd, &ps);
