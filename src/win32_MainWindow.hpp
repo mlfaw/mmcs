@@ -1,6 +1,7 @@
 /*{REPLACEMEWITHLICENSE}*/
 #pragma once
 #include <Windows.h>
+#define GDIPVER 0x0110
 #include <gdiplus.h>
 #include "win32_Tabs.hpp"
 

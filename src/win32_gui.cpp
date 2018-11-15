@@ -15,6 +15,7 @@
 #include "win32_gui.hpp"
 #include "generated/win32_resource.h"
 #include "win32_hinstance.h"
+#define GDIPVER 0x0110
 #include <gdiplus.h>
 
 namespace win32 {

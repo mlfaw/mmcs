@@ -1,6 +1,5 @@
 /*{REPLACEMEWITHLICENSE}*/
 #include "win32_MainWindow.hpp"
-#include <Windows.h>
 #include <commctrl.h> // Staturs bar control
 #include <shellapi.h> // DragAcceptFiles(), DragFinish(), DragQueryPoint(), DragQueryFileW()
 // "Message crackers" and other helpful functions
@@ -25,8 +24,6 @@
 #include <sstream>
 #include <string>
 #include <iostream>
-
-#include <gdiplus.h>
 
 namespace win32 {
 
@@ -141,8 +138,10 @@ LRESULT MainWindow::WmNotify(HWND hwnd, int ctrlId, NMHDR * info)
 BOOL MainWindow::WmCreate(HWND hwnd, LPCREATESTRUCT cs)
 {
 	//if (!win32::ImagePainter_Create(hwnd)) return FALSE;
+#if 0
 	if (!tabbar_.Init(hwnd))
 		return FALSE;
+#endif
 	return TRUE;
 }
 
@@ -331,6 +330,7 @@ void MainWindow::WmSize(HWND hwnd, UINT state, int cx, int cy)
 	HDWP hdwp = BeginDeferWindowPos(5);
 	if (!hdwp) return;
 
+#if 0
 	hdwp = DeferWindowPos(
 		hdwp,
 		tabbar_.hwnd_,
@@ -367,6 +367,7 @@ void MainWindow::WmSize(HWND hwnd, UINT state, int cx, int cy)
 
 		if (!hdwp) return;
 	}
+#endif
 
 	(void)EndDeferWindowPos(hdwp);
 }
