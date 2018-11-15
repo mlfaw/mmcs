@@ -7,6 +7,12 @@
 #include <stdlib.h> // exit(), free()
 #endif
 
+// TODO: Move ShellExecute functions to be ran in a helper process?
+// Because ShellExecute caches verb-handlers and default file-type openers,
+// which is a reasonable thing to do, but I'll leave future self to think it over.
+// Also the RegisterAsDefault window is launched by a
+// shellexecuteex(runas)... so don't forget that one too.
+
 namespace mmcs {
 
 #ifdef _WIN32
@@ -16,7 +22,7 @@ void CALLBACK worker_OpenUrl_NoFree(PTP_CALLBACK_INSTANCE instance, PVOID pv)
 }
 void CALLBACK worker_OpenUrl_FreeAfter(PTP_CALLBACK_INSTANCE instance, PVOID pv)
 {
-	worker_OpenUrl_NoFree(instance, pv);
+	OpenUrlSync((const char *)pv);
 	free(pv);
 }
 
@@ -26,7 +32,7 @@ void CALLBACK worker_OpenFile_NoFree(PTP_CALLBACK_INSTANCE instance, PVOID pv)
 }
 void CALLBACK worker_OpenFile_FreeAfter(PTP_CALLBACK_INSTANCE instance, PVOID pv)
 {
-	worker_OpenFile_NoFree(instance, pv);
+	OpenFileSync((const oschar *)pv);
 	free(pv);
 }
 #endif

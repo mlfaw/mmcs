@@ -421,17 +421,25 @@ LRESULT CALLBACK MainWindow::WndProc(
 	return DefWindowProcW(hwnd, msg, wParam, lParam);
 }
 
-bool MainWindow::DoDispatchCheck(MSG * msg, void * user_data)
-{
-	auto mw = (MainWindow *)user_data;
-	return !TranslateAcceleratorW(mw->hwnd_, mw->accel_, msg);
-}
-
 int MainWindow::Run()
 {
-	return win32::RunMessageLoop(MainWindow::DoDispatchCheck, (void *)this);
+	MSG msg;
+	BOOL bRet;
+	while ((bRet = GetMessageW(&msg, NULL, 0, 0)) != 0)
+	{
+		if (bRet == -1)
+			return -1;
+
+		if (!TranslateAcceleratorW(hwnd_, MainWindowAccelerators, &msg))
+		{
+			TranslateMessage(&msg);
+			DispatchMessageW(&msg);
+		}
+	}
+	return (int)msg.wParam;
 }
 
+#if 0
 HACCEL MainWindow::CreateAccelerators()
 {
 	//typedef struct tagACCEL {
@@ -457,6 +465,7 @@ HACCEL MainWindow::CreateAccelerators()
 
 	return CreateAcceleratorTableW(accels, sizeof(accels) / sizeof(accels[0]));
 }
+#endif
 
 bool MainWindow::Init(int w, int h, int x, int y, bool maximize)
 {
@@ -468,6 +477,7 @@ bool MainWindow::Init(int w, int h, int x, int y, bool maximize)
 
 	HINSTANCE hInstance = HINST_THISCOMPONENT;//mmcs::hInstance;//(HINSTANCE)GetModuleHandleW(NULL);
 
+	// TODO: Cache iconMMCS in a global variable? And error checking?
 	HICON iconMMCS = (HICON)LoadImageW(
 		hInstance,
 		MAKEINTRESOURCEW(IDI_MMCS_ICON),
@@ -477,14 +487,8 @@ bool MainWindow::Init(int w, int h, int x, int y, bool maximize)
 		LR_SHARED
 	);
 
-	HCURSOR cursorArrow = (HCURSOR)LoadImageW(
-		NULL,
-		(LPCWSTR)IDC_ARROW,
-		IMAGE_CURSOR,
-		0,
-		0,
-		LR_SHARED
-	);
+	// TODO: Is cursorArrow okay to cache in a global variable?
+	HCURSOR cursorArrow = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
 
 	WNDCLASSEXW wc;
 	wc.cbSize = sizeof(wc);
@@ -500,9 +504,6 @@ bool MainWindow::Init(int w, int h, int x, int y, bool maximize)
 	wc.lpszClassName = L"MainWindow";
 	wc.hIconSm = NULL; // If NULL, it will try to get a smaller icon from hIcon
 	if (!RegisterClassExW(&wc))
-		return false;
-
-	if (!(accel_ = CreateAccelerators()))
 		return false;
 
 	hwnd_ = CreateWindowExW(
@@ -521,20 +522,23 @@ bool MainWindow::Init(int w, int h, int x, int y, bool maximize)
 	);
 
 	if (!hwnd_)
-		goto err;
+		return false;
+
+	if (mmcs::isPortable)
+	{
+		HMENU hMenu = GetMenu(hwnd_);
+		MENUITEMINFOW item = {};
+		item.cbSize = sizeof(item);
+		item.fMask = MIIM_STATE;
+		item.fState = MFS_DISABLED;
+		(void)SetMenuItemInfoW(hMenu, IDM_HELP_REGISTER_AS_DEFAULT, FALSE, &item);
+	}
 
 	//win32::UseDefaultFontWithChildren(hwnd_);
 
 	(void)ShowWindow(hwnd_, maximize ? SW_SHOWMAXIMIZED : SW_SHOW);
 	(void)UpdateWindow(hwnd_);
 	return true;
-
-err:
-	if (accel_)
-		(void)DestroyAcceleratorTable(accel_);
-	if (hwnd_)
-		DestroyWindow(hwnd_);
-	return false;
 }
 
 }

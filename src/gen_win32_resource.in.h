@@ -37,6 +37,8 @@
 #define IDM_CLOSE_TAB              329
 #define ID_TAB_PAGE                330
 
+#define IDA_MAIN_WINDOW         331
+
 
 #define VER_COMPANYNAME_STR      "mlfaw"
 #define VER_LEGALCOPYRIGHT_STR   "Copyright (c) mlfaw"

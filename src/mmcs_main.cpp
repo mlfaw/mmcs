@@ -4,7 +4,7 @@
 // TODO: CURLOPT_VERBOSE, CURLOPT_DEBUGFUNCTION, CURLOPT_FORBID_REUSE?
 // TODO: curl_global_init_mem() with strdup() checking a hash-table for static-strings... or something?
 // TODO: Remove CURL and wrap libtls around an HTTP header parser?
-//       libtls has tls_config_set_ca_mem() which is :ok_hand:
+//       With libtls, tls_config_set_ca_mem() can be used to remove libressl/openssl's usage of a hardcoded _PATH_SSL_CA_FILE
 
 #ifdef _WIN32
 // This motherfucker is right here at the top before anything can pull in Windows.h
@@ -36,7 +36,7 @@
 #include <sys/stat.h>
 #endif
 
-static const oschar * const portable_filename = _OS("mmcs_portable.txt");
+static const oschar portable_filename[] = _OS("mmcs_portable.txt");
 
 static bool get_exe_and_dir(oschar ** exe_out, oschar ** dir_out)
 {
@@ -96,7 +96,8 @@ static int main_inner(int argc, oschar ** argv)
 {
 	osfile hExeDir = mmcs::file::simpleOpen(mmcs::ExeDir, "rdP");
 	if (hExeDir != (osfile)-1) {
-		osfile hPortable = mmcs::file::simpleRelativeOpen(hExeDir, _OS("mmcs_portable.txt"), "rM");
+		// TODO: Fix me
+		osfile hPortable = mmcs::file::simpleRelativeOpen(hExeDir, portable_filename, "rM");
 		if (hPortable == (osfile)-1) {
 			mmcs::isPortable = false;
 		} else {
@@ -114,7 +115,6 @@ static int main_inner(int argc, oschar ** argv)
 	}
 
 	if (mmcs::NativeMessaging_IsMode(argc, argv)) {
-		// TODO: Figure out how portable will interact with this...
 		return mmcs::NativeMessaging_Handler();
 	}
 

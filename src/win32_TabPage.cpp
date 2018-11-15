@@ -24,7 +24,7 @@ LRESULT CALLBACK TabPageWndProc(
 
 HWND CreateTagPage(HWND hParent, int x, int y, int w, int h)
 {
-	HINSTANCE hInstance = HINST_THISCOMPONENT;//mmcs::hInstance;//(HINSTANCE)GetModuleHandleW(NULL);
+	HINSTANCE hInstance = HINST_THISCOMPONENT;
 
 	HCURSOR cursorArrow = (HCURSOR)LoadImageW(
 		NULL,

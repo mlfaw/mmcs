@@ -3,6 +3,8 @@
 #include <Windows.h>
 namespace win32 {
 
+extern HACCEL MainWindowAccelerators;
+
 bool GuiInit();
 void GuiUnInit();
 

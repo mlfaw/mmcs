@@ -49,4 +49,4 @@ bool simpleRead(osfile f, void * buf, uint32_t size);
 bool slurp(osfile f, void ** outbuf, uint32_t * outsize);
 
 }
-} // namespace mmcs
+}

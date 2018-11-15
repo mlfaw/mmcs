@@ -4,7 +4,6 @@
 
 namespace mmcs {
 
-#ifndef MMCS_UWP
 static const oschar * allowedExtensions[] = {
 	_OS("chrome-extension://[extensionID]"),
 	_OS("ping_pong@example.org"),
@@ -48,6 +47,5 @@ int NativeMessaging_Handler()
 
 	return 1;
 }
-#endif
 
 }

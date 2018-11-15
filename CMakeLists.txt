@@ -2,7 +2,9 @@
 cmake_minimum_required(VERSION 3.0)
 project(mmcs_superbuild LANGUAGES C CXX)
 
-cmake_policy(SET CMP0074 NEW) # for find_package(ZLIB) to use ZLIB_ROOT
+if (POLICY CMP0074)
+	cmake_policy(SET CMP0074 NEW) # for find_package(ZLIB) to use ZLIB_ROOT
+endif()
 
 # These are inserted into various files through configure_file
 if (NOT DEFINED MMCS_YEAR)
@@ -129,7 +131,11 @@ add_library(mylibcurl STATIC IMPORTED)
 set_target_properties(mylibcurl PROPERTIES IMPORTED_LOCATION "${CURL_BUILD_DIR}/${__BUILD_TYPE_PREFIX}libcurl${CURL_LIB_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
 set(ZLIB_ROOT "${CMAKE_SOURCE_DIR}/thirdparty/zlib-1.2.11")
-set(ZLIB_LIBRARY "${CMAKE_BINARY_DIR}/zlib/${__BUILD_TYPE_PREFIX}${CMAKE_STATIC_LIBRARY_PREFIX}zlibstatic${ZLIB_LIB_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+if (UNIX)
+	set(ZLIB_LIBRARY "${CMAKE_BINARY_DIR}/zlib/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
+else()
+	set(ZLIB_LIBRARY "${CMAKE_BINARY_DIR}/zlib/${__BUILD_TYPE_PREFIX}${CMAKE_STATIC_LIBRARY_PREFIX}zlibstatic${ZLIB_LIB_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+endif()
 find_package(ZLIB)
 
 include_directories(

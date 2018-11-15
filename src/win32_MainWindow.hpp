@@ -71,11 +71,7 @@ public:
 		LPARAM lParam
 	);
 
-	static bool DoDispatchCheck(MSG * msg, void * user_data);
-
 	int Run();
-
-	HACCEL CreateAccelerators();
 
 	bool Init(int w, int h, int x, int y, bool maximize);
 };

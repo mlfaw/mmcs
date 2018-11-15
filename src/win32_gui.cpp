@@ -13,13 +13,16 @@
 // https://docs.microsoft.com/en-us/windows/desktop/api/WinBase/nf-winbase-readdirectorychangesw
 
 #include "win32_gui.hpp"
+#include "generated/win32_resource.h"
+#include "win32_hinstance.h"
 #include <gdiplus.h>
 
 namespace win32 {
 
-static Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+HACCEL MainWindowAccelerators = NULL;
+
 static ULONG_PTR gdiplusToken = 0;
-static HFONT hMessageFont = NULL;
+static HFONT DefaultMessageFont = NULL;
 
 static bool GuiInit_inner()
 {
@@ -28,15 +31,19 @@ static bool GuiInit_inner()
 	ncMetrics.cbSize = sizeof(ncMetrics);
 	if (!SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncMetrics), &ncMetrics, 0))
 		return false;
-	if (!(hMessageFont = CreateFontIndirectW(&ncMetrics.lfMessageFont)))
+	if (!(DefaultMessageFont = CreateFontIndirectW(&ncMetrics.lfMessageFont)))
 		return false;
 
+	Gdiplus::GdiplusStartupInput gdiplusStartupInput;
 	auto status = Gdiplus::GdiplusStartup(
 		&gdiplusToken,
 		&gdiplusStartupInput,
 		NULL
 	);
 	if (status != Gdiplus::Ok)
+		return false;
+
+	if (!(MainWindowAccelerators = LoadAcceleratorsW(HINST_THISCOMPONENT, MAKEINTRESOURCEW(IDA_MAIN_WINDOW))))
 		return false;
 
 	return true;
@@ -54,8 +61,8 @@ bool GuiInit()
 
 void GuiUnInit()
 {
-	if (hMessageFont)
-		(void)DeleteObject((HGDIOBJ)hMessageFont);
+	if (DefaultMessageFont)
+		(void)DeleteObject((HGDIOBJ)DefaultMessageFont);
 	if (gdiplusToken)
 		Gdiplus::GdiplusShutdown(gdiplusToken);
 }
@@ -63,7 +70,7 @@ void GuiUnInit()
 // Use our system font please
 void UseDefaultFont(HWND hwnd)
 {
-	(void)SendMessage(hwnd, WM_SETFONT, (WPARAM)hMessageFont, TRUE);
+	(void)SendMessage(hwnd, WM_SETFONT, (WPARAM)DefaultMessageFont, TRUE);
 }
 
 static BOOL CALLBACK setFontCallback(HWND hwnd, LPARAM lParam)

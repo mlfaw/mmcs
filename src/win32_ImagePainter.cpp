@@ -5,7 +5,7 @@
 #include "../thirdparty/stb_image.h"
 #include "generated/win32_resource.h"
 #include "win32_hinstance.h"
-#include "msw_com.hpp" // msw::SafeRelease()
+#include "msw_misc.hpp" // msw::SafeRelease()
 
 #include <d3d11.h>
 #include <dxgi.h>

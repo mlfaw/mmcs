@@ -290,13 +290,13 @@ bool simpleRead(osfile f, void * buf, uint32_t size)
 #endif
 }
 
-// Slurp and also add a zero byte at the end.
-// Makes strings easier...
+// Read entire file. A 0x00 byte is appended to simply string usage. The 0x00 byte is not included in outsize.
+// 
 bool slurp(osfile f, void ** outbuf, uint32_t * outsize)
 {
 	uint64_t size;
 	if (!getSize(f, &size)) return false;
-	if (size > 0xFFFFFFFE) return false;
+	if (size > (0xFFFFFFFF-1)) return false;
 	uint32_t newSize = (uint32_t)size;
 	char * buf = (char *)malloc(newSize + 1);
 	if (!buf) return false;
@@ -310,5 +310,5 @@ bool slurp(osfile f, void ** outbuf, uint32_t * outsize)
 	return true;
 }
 
-} // namespace file
-} // namespace mmcs
+}
+}

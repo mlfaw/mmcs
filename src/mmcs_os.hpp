@@ -5,7 +5,8 @@
 #ifdef _WIN32
 #define oschar wchar_t
 #define _OS(x) L ## x
-//#define osdirsep '\\'
+#define osdirchar '\\'
+#define osdirstr  "\\"
 #define osstring  std::wstring
 #define osstrlen  wcslen
 #define osstrstr  wcsstr
@@ -17,7 +18,8 @@
 #else
 #define oschar char
 #define _OS(x) x
-//#define osdirsep '/'
+#define osdirchar '/'
+#define osdirstr  "/"
 #define osstring  std::string
 #define osstrlen  strlen
 #define osstrstr  strstr
@@ -31,8 +33,6 @@
 // file handle/fd type
 #ifdef _WIN32
 #define osfile HANDLE
-#elif MMCS_UWP
-#define osfile Windows.Storage.StorageFile
 #else
 #define osfile int
 #endif

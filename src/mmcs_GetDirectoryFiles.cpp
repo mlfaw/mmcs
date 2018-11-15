@@ -224,4 +224,4 @@ bool GetDirectoryFiles(std::vector<osstring> ** results, const oschar * dirName)
 #endif
 }
 
-} // namespace mmcs
+}

@@ -4,8 +4,6 @@
 #ifdef _WIN32
 #include <Windows.h>
 #include <shlobj.h>
-#elif MMCS_UWP
-// todo
 #else
 // todo
 #endif

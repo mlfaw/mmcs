@@ -4,6 +4,7 @@
 #include <Windows.h>
 #include <windowsx.h> // Button_GetCheck()
 #include "generated/win32_resource.h"
+#include "win32_hinstance.h"
 
 namespace win32 {
 
@@ -29,14 +30,7 @@ static INT_PTR CALLBACK DialogProc(
 	struct registerData * d;
 	switch (msg) {
 	case WM_INITDIALOG:
-		hIcon = (HICON)LoadImageW(
-			GetModuleHandle(NULL),
-			MAKEINTRESOURCEW(IDI_MMCS_ICON),
-			IMAGE_ICON,
-			0,
-			0,
-			LR_SHARED
-		);
+		hIcon = LoadIconW(HINST_THISCOMPONENT, MAKEINTRESOURCEW(IDI_MMCS_ICON));
 		(void)SendMessage(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
 		(void)SendMessage(hwnd, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
 		return TRUE;
@@ -63,11 +57,11 @@ static INT_PTR CALLBACK DialogProc(
 int RegisterAsDefault_Handler()
 {
 	INT_PTR ret = DialogBoxParamW(
-		GetModuleHandle(NULL),
+		HINST_THISCOMPONENT,
 		MAKEINTRESOURCEW(IDD_REGISTER_AS_DEFAULT),
-		NULL,
+		NULL, // hwndParent
 		DialogProc,
-		NULL
+		NULL // dwInitParam
 	);
 
 	if (ret == 2) return 0; // cancel button
