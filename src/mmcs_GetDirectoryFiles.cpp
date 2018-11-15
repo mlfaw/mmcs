@@ -14,23 +14,23 @@ typedef struct _FILE_NAMES_INFORMATION {
 	WCHAR FileName[1];
 } FILE_NAMES_INFORMATION, *PFILE_NAMES_INFORMATION;
 
- extern "C"
- NTSYSCALLAPI
- NTSTATUS
- NTAPI
- NtQueryDirectoryFile(
- 	_In_ HANDLE FileHandle,
- 	_In_opt_ HANDLE Event,
- 	_In_opt_ PIO_APC_ROUTINE ApcRoutine,
- 	_In_opt_ PVOID ApcContext,
- 	_Out_ PIO_STATUS_BLOCK IoStatusBlock,
- 	_Out_writes_bytes_(Length) PVOID FileInformation,
- 	_In_ ULONG Length,
- 	_In_ FILE_INFORMATION_CLASS FileInformationClass,
- 	_In_ BOOLEAN ReturnSingleEntry,
- 	_In_opt_ PUNICODE_STRING FileName,
- 	_In_ BOOLEAN RestartScan
- );
+extern "C"
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtQueryDirectoryFile(
+	_In_ HANDLE FileHandle,
+	_In_opt_ HANDLE Event,
+	_In_opt_ PIO_APC_ROUTINE ApcRoutine,
+	_In_opt_ PVOID ApcContext,
+	_Out_ PIO_STATUS_BLOCK IoStatusBlock,
+	_Out_writes_bytes_(Length) PVOID FileInformation,
+	_In_ ULONG Length,
+	_In_ FILE_INFORMATION_CLASS FileInformationClass,
+	_In_ BOOLEAN ReturnSingleEntry,
+	_In_opt_ PUNICODE_STRING FileName,
+	_In_ BOOLEAN RestartScan
+);
 #else
 #include <sys/types.h>
 #include <dirent.h>
@@ -46,7 +46,7 @@ bool GetDirectoryFilesFromHandle(std::vector<osstring> ** results, osfile in_hDi
 	std::vector<osstring> * files = NULL;
 	HANDLE hDir;
 
-	// Duplicate in_hDir as NtQueryDirectoryFile() might(?) clobber a scan?
+	// Duplicate in_hDir because simultaneous NtQueryDirectoryFile() calls on a HANDLE would clobber the scan-index.
 	{
 		HANDLE proc = GetCurrentProcess();
 		if (!DuplicateHandle(proc, in_hDir, proc, &hDir, 0, FALSE, DUPLICATE_SAME_ACCESS))
@@ -73,7 +73,7 @@ bool GetDirectoryFilesFromHandle(std::vector<osstring> ** results, osfile in_hDi
 		TRUE // RestartScan
 	);
 
-	if (status != 0) // STATUS_SUCCESS is 0
+	if (status != 0) // (status != STATUS_SUCCESS)
 		goto out;
 
 	try {
