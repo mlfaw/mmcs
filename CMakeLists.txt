@@ -2,6 +2,8 @@
 cmake_minimum_required(VERSION 3.0)
 project(mmcs_superbuild LANGUAGES C CXX)
 
+cmake_policy(SET CMP0074 NEW) # for find_package(ZLIB) to use ZLIB_ROOT
+
 # These are inserted into various files through configure_file
 if (NOT DEFINED MMCS_YEAR)
 	string(TIMESTAMP MMCS_YEAR  "%Y" UTC)
@@ -97,6 +99,9 @@ set(CURL_SOURCE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/curl-7.62.0")
 set(CURL_BUILD_DIR "${CMAKE_BINARY_DIR}/curl/src/curl-build/lib")
 if (CMAKE_BUILD_TYPE MATCHES Debug)
 	set(CURL_LIB_POSTFIX "-d")
+	if (MSVC)
+		set(ZLIB_LIB_POSTFIX "d")
+	endif()
 else()
 	set(CURL_LIB_POSTFIX "")
 endif()
@@ -123,7 +128,12 @@ ExternalProject_Add(
 add_library(mylibcurl STATIC IMPORTED)
 set_target_properties(mylibcurl PROPERTIES IMPORTED_LOCATION "${CURL_BUILD_DIR}/${__BUILD_TYPE_PREFIX}libcurl${CURL_LIB_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
+set(ZLIB_ROOT "${CMAKE_SOURCE_DIR}/thirdparty/zlib-1.2.11")
+set(ZLIB_LIBRARY "${CMAKE_BINARY_DIR}/zlib/${__BUILD_TYPE_PREFIX}${CMAKE_STATIC_LIBRARY_PREFIX}zlibstatic${ZLIB_LIB_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+find_package(ZLIB)
+
 include_directories(
+	"${ZLIB_INCLUDE_DIRS}"
 	"${OPENSSL_INCLUDE_DIR}"
 	"${CURL_SOURCE_DIR}/include"
 	"${CURL_BUILD_DIR}"
@@ -132,6 +142,7 @@ include_directories(
 list(APPEND mmcs_libs
 	OpenSSL::Crypto
 	OpenSSL::SSL
+	ZLIB::ZLIB
 	"${LIBRESSL_TLS_LIBRARY}"
 	mylibcurl
 )

@@ -13,6 +13,8 @@ cmake --build build_linux/ -- -j$(nproc)
 exit 0
 
 :WIN
+cmake -Bbuild_win32/zlib -H"thirdparty/zlib-1.2.11" -DCMAKE_BUILD_TYPE=Debug -DAMD64=ON -G"Visual Studio 15 2017 Win64"
+cmake --build build_win32/zlib/ --config Debug
 cmake -Bbuild_win32/libressl -H"thirdparty/libressl-2.8.2" -DCMAKE_BUILD_TYPE=Debug -DLIBRESSL_SKIP_INSTALL=ON -DLIBRESSL_APPS=OFF -DLIBRESSL_TESTS=OFF -G"Visual Studio 15 2017 Win64"
 cmake --build build_win32/libressl/ --config Debug
 cmake -Bbuild_win32 -H. -DCMAKE_BUILD_TYPE=Debug -G"Visual Studio 15 2017 Win64"
