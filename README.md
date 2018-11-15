@@ -81,6 +81,9 @@ Misc notes:
 - ListViewSample.cpp
 - Search \*chan archive with media hash (base64 of raw md5 hash bytes)
 - Create Window in main thread. Open database and load previous session in new thread & pass results to main thread.
+- Have the (main) media window be implemented as a child-window with the same dimensions as the largest connected monitor. When the media viewport resizes the media window draws media at a different position and size, but does not need to resize the actual HWND and does not need to recreate the swap chain. \*Monitor resolution changes can trigger media widnow resizes (and swap-chain recreation due to resizes).
+    - This approach's effectiveness will known on implementation... and hopefully end my quest for smooth media painting even during window-resizing...
+- The media-preview grid SHOULD NOT use new HWNDs for every item. 1000s of results = 1000s of windows. This may mean using a fixed number of preview HWNDs that paint new previews when scrolling. This may also mean using DirectX, Direct2D, OpenGL, or Vulkan to draw the layout and images entirely...
 
 Currently used libraries:
 - SQLite 3.25.2 - statically linked
