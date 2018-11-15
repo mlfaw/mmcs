@@ -137,7 +137,8 @@ LRESULT MainWindow::WmNotify(HWND hwnd, int ctrlId, NMHDR * info)
 
 BOOL MainWindow::WmCreate(HWND hwnd, LPCREATESTRUCT cs)
 {
-	//if (!win32::ImagePainter_Create(hwnd)) return FALSE;
+	if (!win32::ImagePainter_Create(hwnd))
+		return FALSE;
 #if 0
 	if (!tabbar_.Init(hwnd))
 		return FALSE;
@@ -248,7 +249,7 @@ void MainWindow::WmPaint(HWND hwnd)
 {
 	if (!image_)
 	{
-		image_ = Gdiplus::Image::FromFile(L"C:\\code\\mmcs\\900kb.jpg", FALSE);
+		image_ = Gdiplus::Image::FromFile(L"C:\\code\\mmcs\\900KB.jpg", FALSE);
 	}
 
 	PAINTSTRUCT ps;

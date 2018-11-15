@@ -42,16 +42,12 @@ static IDWriteTextFormat * writeTextFormat = NULL;
 
 static ID2D1SolidColorBrush * pBlackBrush = NULL;
 
-static unsigned frames = 0;
-static wchar_t frameBuf[20] = L"0";
-static unsigned frameBufLen = 1;
-
 namespace win32 {
 
 static int nxtidx = 0;
 static const char * ff[] = {
-	"C:\\code\\mmcs\\Dk92uSaX0AAj3yT.png",
-	"C:\\code\\mmcs\\0.jpg",
+	"C:\\code\\mmcs\\900KB.jpg",
+	"C:\\code\\mmcs\\235KB.jpg",
 };
 static bool setupNextImage()
 {
@@ -296,7 +292,7 @@ static void IpWmPaintInner(HWND hwnd)
 	RECT rc;
 	D2D1_TAG tag1, tag2;
 
-	if (!GetClientRect(hwnd, &rc)) return;
+	if (!GetClientRect(GetParent(hwnd), &rc)) return;
 	D2D1_RECT_F destRect = D2D1::RectF(
 		0.0f,
 		0.0f,
@@ -333,24 +329,6 @@ static void IpWmPaintInner(HWND hwnd)
 		NULL
 	);
 
-	if (*frameBuf) {
-		D2D1_RECT_F textStuff = D2D1::RectF(
-			(float)rc.left,
-			(float)rc.top,
-			0.0f,
-			0.0f
-		);
-		d2d1DeviceContext->DrawTextW(
-			frameBuf,
-			frameBufLen,
-			writeTextFormat,
-			textStuff,
-			pBlackBrush,
-			D2D1_DRAW_TEXT_OPTIONS_NONE,
-			DWRITE_MEASURING_MODE_NATURAL
-		);
-	}
-
 	hr = d2d1DeviceContext->EndDraw(&tag1, &tag2);
 	if (hr != S_OK) {
 		// D2DERR_RECREATE_TARGET?
@@ -376,6 +354,7 @@ static void IpWmPaint(HWND hwnd)
 	(void)EndPaint(hwnd, &ps);
 }
 
+#if 0
 static bool firstSize = true;
 static void IpWmSize(HWND hwnd, UINT state, int cx, int cy)
 {
@@ -402,22 +381,6 @@ static void IpWmSize(HWND hwnd, UINT state, int cx, int cy)
 		MessageBoxA(NULL, "Failed to setup swap chain", "Fuck", MB_OK);
 		ExitProcess(1);
 	}
-}
-
-static void IpWmSizing(HWND hwnd, UINT edge, RECT * rect)
-{
-	//D2D1_SIZE_U size = D2D1::SizeU(rect->right, rect->bottom);
-	//d2d1DeviceContext->Resize(size);
-	//(void)UpdateWindow(hwnd);
-}
-
-static void IpWmDropFiles(HWND hwnd, HDROP hdrop)
-{
-	POINT dropPoint;
-	BOOL droppedInClientArea = DragQueryPoint(hdrop, &dropPoint);
-	UINT fileCount = DragQueryFileW(hdrop, 0xFFFFFFFF, NULL, 0);
-
-	DragFinish(hdrop);
 }
 
 static void IpWmMouseWheel(HWND hwnd, int xPos, int yPos, int zDelta, UINT fwKeys)
@@ -453,6 +416,7 @@ static void IpWmMouseWheel(HWND hwnd, int xPos, int yPos, int zDelta, UINT fwKey
 	if (FAILED(hr)) return;
 	RedrawWindow(hwnd, NULL, NULL, RDW_INVALIDATE);
 }
+#endif
 
 static LRESULT CALLBACK IpWindowProc(
 	HWND hwnd,
@@ -466,32 +430,22 @@ static LRESULT CALLBACK IpWindowProc(
 		HANDLE_MSG(hwnd, WM_CREATE, IpWmCreate);
 		HANDLE_MSG(hwnd, WM_DESTROY, IpWmDestroy);
 		HANDLE_MSG(hwnd, WM_PAINT, IpWmPaint);
+		case WM_ERASEBKGND:
+			// TODO: Keep this?
+			return 1;
+#if 0
 		HANDLE_MSG(hwnd, WM_SIZE, IpWmSize);
-		HANDLE_MSG(hwnd, WM_DROPFILES, IpWmDropFiles);
 		HANDLE_MSG(hwnd, WM_MOUSEWHEEL, IpWmMouseWheel);
-	case WM_SIZING:
-		IpWmSizing(hwnd, (UINT)wParam, (RECT *)lParam);
-		return TRUE;
-	case WM_TIMER:
-		frameBufLen = _snwprintf(frameBuf, 19, L"%u", frames);
-		frames = 0;
-		return 0;
+#endif
 	}
 	return DefWindowProcW(hwnd, msg, wParam, lParam);
 }
 
 bool ImagePainter_Create(HWND hParent)
 {
-	HCURSOR cursorArrow = (HCURSOR)LoadImageW(
-		NULL,
-		(LPCWSTR)IDC_ARROW,
-		IMAGE_CURSOR,
-		0,
-		0,
-		LR_SHARED
-	);
+	HCURSOR cursorArrow = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
 
-	HINSTANCE hInstance = HINST_THISCOMPONENT;//(HINSTANCE)GetModuleHandleW(NULL);
+	HINSTANCE hInstance = HINST_THISCOMPONENT;
 
 	WNDCLASSEXW wc;
 	wc.cbSize = sizeof(wc);
@@ -506,31 +460,25 @@ bool ImagePainter_Create(HWND hParent)
 	wc.lpszMenuName = NULL;
 	wc.lpszClassName = L"ImagePainter";
 	wc.hIconSm = NULL;
+	if (!RegisterClassExW(&wc))
+		return false;
 
-	ATOM IpAtom = RegisterClassExW(&wc);
-	if (!IpAtom) return false;
-
-	RECT rc;
-	if (!GetClientRect(hParent, &rc)) return false;
-	int cx = rc.right, cy = rc.bottom;
-
-	HWND IpHwnd = CreateWindowExW(
+	HWND hwnd = CreateWindowExW(
 		0, //WS_EX_ACCEPTFILES,
-		(LPCWSTR)IpAtom,
+		L"ImagePainter",
 		L"MMCS by mlfaw",
 		WS_CHILD | WS_VISIBLE,
 		0, // x
 		0, // y
-		cx, // width
-		cy, // height
+		1920, // width
+		1080, // height
 		hParent,
 		(HMENU)ID_IMAGEPAINTER,
 		hInstance,
 		NULL // lpParam
 	);
-	if (!IpHwnd) return false;
-
-	UINT_PTR asdf = SetTimer(IpHwnd, 12312, 1000, NULL);
+	if (!hwnd)
+		return false;
 
 	return true;
 }
