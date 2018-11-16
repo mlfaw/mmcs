@@ -87,7 +87,7 @@ Misc notes:
 - Figure out how to retrieve the Windows 10 setting for Light or Dark Mode... and obviously react to it... And the accent color too...
 
 Currently used libraries:
-- SQLite 3.25.2 - statically linked
+- SQLite 3.25.3 - statically linked
   - `sqlite3.c` and `sqlite3.h` are added to `mmcs_sources` in `CMakelists.txt`. Simple.
 - LibreSSL 2.8.2 - statically linked
   - Built by `polyglot_build.bat` before the MMCS CMake superbuild is.

@@ -47,8 +47,8 @@ list(APPEND mmcs_sources
 	#"${GEN_FOLDER}/Changelog.c"
 	#"${GEN_FOLDER}/Changelog.h"
 	"${CMAKE_SOURCE_DIR}/thirdparty/stb_image.h"
-	"${CMAKE_SOURCE_DIR}/thirdparty/sqlite-amalgamation-3250200/sqlite3.c"
-	"${CMAKE_SOURCE_DIR}/thirdparty/sqlite-amalgamation-3250200/sqlite3.h"
+	"${CMAKE_SOURCE_DIR}/thirdparty/sqlite-amalgamation-3250300/sqlite3.c"
+	"${CMAKE_SOURCE_DIR}/thirdparty/sqlite-amalgamation-3250300/sqlite3.h"
 	#"src/small_zip.c"
 	#"src/small_zip.h"
 )
