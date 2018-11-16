@@ -92,7 +92,7 @@ Currently used libraries:
 - LibreSSL 2.8.2 - statically linked
   - Built by `polyglot_build.bat` before the MMCS CMake superbuild is.
   - Custom `FindOpenSSL.cmake` file used to link to libcurl & mmcs without modifying an external project's files.
-- libcurl 7.61.1 - statically linked
+- libcurl 7.62.0 - statically linked
   - Uses LibreSSL through modified CMAKE_MODULE_PATH to use custom `FindOpenSSL.cmake`
   - Replace with another HTTP parser/library wrapped within libtls (HTTPS) / raw sockets (HTTP)?
 
