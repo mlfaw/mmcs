@@ -288,6 +288,7 @@ static void IpWmDestroy(HWND hwnd)
 		stbi_image_free(ImageData);
 }
 
+static float g_Scale = 1.0f;
 static void IpWmPaintInner(HWND hwnd)
 {
 	HRESULT hr;
@@ -316,7 +317,7 @@ static void IpWmPaintInner(HWND hwnd)
 	);
 
 	mmcs::ScaleSizePos(
-		0.8f,
+		g_Scale,
 		dw,
 		dh,
 		dx,
@@ -467,6 +468,19 @@ static LRESULT CALLBACK IpWindowProc(
 		HANDLE_MSG(hwnd, WM_SIZE, IpWmSize);
 		HANDLE_MSG(hwnd, WM_MOUSEWHEEL, IpWmMouseWheel);
 #endif
+	case WM_MOUSEWHEEL:
+	{
+		float scaleAmount = 0.10f;
+		short delta = HIWORD(wParam);
+		if (delta > 0) { // scroll up
+			g_Scale += scaleAmount;
+		} else { // scroll down
+			g_Scale -= scaleAmount;
+			if (g_Scale < scaleAmount)
+				g_Scale = scaleAmount;
+		}
+		InvalidateRect(hwnd, NULL, FALSE);
+	}
 	}
 	return DefWindowProcW(hwnd, msg, wParam, lParam);
 }
