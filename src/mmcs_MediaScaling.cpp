@@ -32,7 +32,18 @@ void ScaleSizePos(
 	float & dy
 )
 {
-
+	if (scale == 1.0f)
+		return;
+	float original_dw = dw, original_dh = dh;
+	dw *= scale;
+	dh *= scale;
+	if (scale > 1.0f) {
+		dx -= (dw - original_dw) / 2;
+		dy -= (dh - original_dh) / 2;
+	} else {
+		dx += (original_dw - dw) / 2;
+		dy += (original_dh - dh) / 2;
+	}
 }
 
 }
