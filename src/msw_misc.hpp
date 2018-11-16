@@ -12,7 +12,7 @@ namespace msw {
 // SafeRelease
 template <class T>
 void SafeRelease(T ** x) {
-    if (x) {
+    if (*x) {
         (*x)->Release();
         *x = NULL;
     }
