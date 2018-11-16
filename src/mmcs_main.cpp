@@ -123,7 +123,7 @@ static int main_inner(int argc, oschar ** argv)
 		return 1;
 
 	win32::MainWindow mw;
-	if (!mw.Init(600, 400, CW_USEDEFAULT, CW_USEDEFAULT, false))
+	if (!mw.Init(1200, 900, CW_USEDEFAULT, CW_USEDEFAULT, false))
 		return 1;
 	int ret = mw.Run();
 

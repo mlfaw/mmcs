@@ -176,44 +176,6 @@ void MainWindow::WmDropFiles(HWND hwnd, HDROP hdrop)
 	DragFinish(hdrop);
 }
 
-static inline void imageFit(
-	RECT & destRect,
-	RECT & imgRect,
-	double imgW,
-	double imgH,
-	double clW,
-	double clH
-)
-{
-	double destX, destY, destW, destH;
-	double scaleH = clH / imgH;
-	double scaleW = clW / imgW;
-
-	if (scaleW < scaleH)
-	{
-		destW = clW;
-		destH = imgH * scaleW;
-		destX = 0;
-		destY = (clH - destH) / 2;
-	}
-	else
-	{
-		destW = imgW * scaleH;
-		destH = clH;
-		destX = (clW - destW) / 2;
-		destY = 0;
-	}
-
-#if 0
-	destRect = Gdiplus::RectF(
-		(Gdiplus::REAL)destX,
-		(Gdiplus::REAL)destY,
-		(Gdiplus::REAL)destW,
-		(Gdiplus::REAL)destH
-	);
-#endif
-}
-
 #define SWP_STATECHANGED 0x8000
 #define SWP_NOCLIENTSIZE 0x0800
 #define SWP_NOCLIENTMOVE 0x1000
@@ -288,7 +250,30 @@ void MainWindow::WmSize(HWND hwnd, UINT state, int cx, int cy)
 	}
 #endif
 
+#if 0
+	HWND imagePainter = GetDlgItem(hwnd, ID_IMAGEPAINTER);
+	if (imagePainter)
+	{
+		hdwp = DeferWindowPos(
+			hdwp,
+			imagePainter,
+			NULL,
+			0,
+			0,
+			0,
+			0,
+			SWP_NOZORDER | SWP_NOSIZE
+		);
+		if (!hdwp) return;
+	}
+#endif
+
 	(void)EndDeferWindowPos(hdwp);
+
+#if 0
+	if (imagePainter)
+		RedrawWindow(imagePainter, NULL, NULL, RDW_UPDATENOW | RDW_INVALIDATE);
+#endif
 }
 
 LRESULT CALLBACK MainWindow::WndProc(
@@ -321,6 +306,14 @@ LRESULT CALLBACK MainWindow::WndProc(
 			HANDLE_MSG(hwnd, WM_NOTIFY,     mw->WmNotify);
 			HANDLE_MSG(hwnd, WM_DROPFILES,  mw->WmDropFiles);
 			HANDLE_MSG(hwnd, WM_WINDOWPOSCHANGED, mw->WmWindowPosChanged);
+#if 0
+		case WM_SIZING:
+		{
+			RECT * prc = (RECT *)lParam;
+			mw->WmSize(hwnd, 0, prc->right, prc->bottom);
+			return TRUE;
+		}
+#endif
 		}
 	}
 

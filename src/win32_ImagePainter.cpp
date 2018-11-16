@@ -6,6 +6,7 @@
 #include "generated/win32_resource.h"
 #include "win32_hinstance.h"
 #include "msw_misc.hpp" // msw::SafeRelease()
+#include "mmcs_MediaScaling.hpp"
 
 #include <d3d11.h>
 #include <dxgi.h>
@@ -44,10 +45,11 @@ static ID2D1SolidColorBrush * pBlackBrush = NULL;
 
 namespace win32 {
 
-static int nxtidx = 0;
+static int nxtidx = 1;
 static const char * ff[] = {
-	"C:\\code\\mmcs\\900KB.jpg",
-	"C:\\code\\mmcs\\235KB.jpg",
+	"C:\\code\\mmcs\\235KB.png",
+	"C:\\code\\mmcs\\900KB_2.jpg",
+	"C:\\code\\mmcs\\27MB.png",
 };
 static bool setupNextImage()
 {
@@ -293,12 +295,6 @@ static void IpWmPaintInner(HWND hwnd)
 	D2D1_TAG tag1, tag2;
 
 	if (!GetClientRect(GetParent(hwnd), &rc)) return;
-	D2D1_RECT_F destRect = D2D1::RectF(
-		0.0f,
-		0.0f,
-		(float)rc.right,
-		(float)rc.bottom
-	);
 
 	D2D1_RECT_F srcRect = D2D1::RectF(
 		0.0f,
@@ -307,19 +303,53 @@ static void IpWmPaintInner(HWND hwnd)
 		(float)ImageY
 	);
 
+	float dw, dh, dx, dy;
+	mmcs::CenterFit(
+		(float)ImageX,
+		(float)ImageY,
+		(float)rc.right,
+		(float)rc.bottom,
+		dw,
+		dh,
+		dx,
+		dy
+	);
+
+	mmcs::ScaleSizePos(
+		0.8f,
+		dw,
+		dh,
+		dx,
+		dy
+	);
+
+	D2D1_RECT_F destRect = D2D1::RectF(
+#if 0
+		0.0f,
+		0.0f,
+		(float)rc.right,
+		(float)rc.bottom
+#else
+		dx,
+		dy,
+		dx + dw,
+		dh + dy
+#endif
+	);
+
 	d2d1DeviceContext->BeginDraw();
 
-	// d2d1DeviceContext->DrawRectangle(
-	// 	destRect,
-	// 	pBlackBrush
-	// );
+	d2d1DeviceContext->Clear(D2D1::ColorF(D2D1::ColorF::Blue, 1.0f));
 
+#if 0
 	// Apply the scale transform to the render target.
-	//d2d1DeviceContext->SetTransform(
-	//	D2D1::Matrix3x2F::Scale(
-	//		D2D1::Size(1.3f, 1.3f),
-	//		D2D1::Point2F(438.0f, 80.5f))
-	//);
+	d2d1DeviceContext->SetTransform(
+		D2D1::Matrix3x2F::Scale(
+			D2D1::Size(0.8f, 0.8f)
+			//, D2D1::Point2F(438.0f, 80.5f)
+		)
+	);
+#endif
 
 	d2d1DeviceContext->DrawBitmap(
 		d2d1MasterChiefBitmap,
