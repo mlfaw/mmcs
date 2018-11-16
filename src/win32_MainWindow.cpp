@@ -27,114 +27,6 @@
 
 namespace win32 {
 
-void MainWindow::WmCommand(HWND hwnd, int id, HWND hwndCtrl, UINT codeNotify)
-{
-	// Menu or Accelerator
-	if (hwndCtrl == (HWND)0 || hwndCtrl == (HWND)1)
-	{
-		switch (id)
-		{
-		case 0: // User clicked on a separator...
-			break;
-		case IDM_FILE_NEW_TAB:
-		{
-			//static int fuck = 1;
-			//wchar_t buf[20] = {};
-			//swprintf(buf, L"files (%d)", ++fuck);
-			tabbar_.Append(L"files (0)");
-			break;
-		}
-		case IDM_CLOSE_TAB:
-		{
-			int idx = tabbar_.right_click_idx_;
-			if (idx == -1)
-				// Coming from Ctrl+W if invalid right_click_idx_
-				if (-1 == (idx = TabCtrl_GetCurSel(tabbar_.hwnd_)))
-					break;
-			tabbar_.right_click_idx_ = -1;
-			tabbar_.Remove(idx);
-			break;
-		}
-		case IDM_FILE_OPEN_FILES:
-		case IDM_FILE_OPEN_DIRS:
-		{
-			std::vector<osstring> * results;
-			bool foldersOnly = id == IDM_FILE_OPEN_DIRS;
-			if (mmcs::SelectFilesWindow(&results, foldersOnly, true))
-			{
-				for (const auto & x : *results)
-				{
-					MessageBoxW(NULL, x.c_str(), L"", MB_OK);
-				}
-				delete results;
-			}
-			break;
-		}
-		case IDM_FILE_EXIT:
-			(void)DestroyWindow(hwnd);
-			break;
-		case IDM_VIEW_TOGGLE_DARK_MODE:
-		{
-			HMENU hMenu = GetMenu(hwnd);
-			MENUITEMINFOW info;
-			info.cbSize = sizeof(info);
-			info.fMask = MIIM_STATE;
-			if (!GetMenuItemInfoW(hMenu, IDM_VIEW_TOGGLE_DARK_MODE, FALSE, &info))
-				return;
-			if (info.fState & MFS_CHECKED)
-				info.fState &= ~MFS_CHECKED;
-			else
-				info.fState |= MFS_CHECKED;
-			if (!SetMenuItemInfoW(hMenu, IDM_VIEW_TOGGLE_DARK_MODE, FALSE, &info))
-				return;
-			(void)DrawMenuBar(hwnd);
-			break;
-		}
-		case IDM_HELP_WEBSITE:
-			mmcs::OpenUrlAsync("https://mlfaw.com/mmcs", false);
-			break;
-		case IDM_HELP_GITHUB:
-			mmcs::OpenUrlAsync("https://github.com/mlfaw/mmcs", false);
-			break;
-		case IDM_HELP_CHANGELOG:
-		{
-			const oschar changelogtxt[] = _OS("/changelog.txt");
-			auto len = osstrlen(mmcs::ExeDir) + sizeof(changelogtxt);
-			oschar * changelogpath = (oschar *)malloc(len * sizeof(oschar));
-			if (!changelogpath)
-				return;
-			osstrcpy(changelogpath, mmcs::ExeDir);
-			osstrcat(changelogpath, changelogtxt);
-			if (!mmcs::OpenFileAsync(changelogpath, true))
-				free(changelogpath);
-			break;
-		}
-		case IDM_HELP_REGISTER_AS_DEFAULT:
-			win32::RegisterAsDefault_Launch();
-			break;
-		case IDM_HELP_ABOUT:
-			break;
-		}
-	}
-	else // Control
-	{
-
-	}
-}
-
-LRESULT MainWindow::WmNotify(HWND hwnd, int ctrlId, NMHDR * info)
-{
-	switch (info->code)
-	{
-	case TCN_SELCHANGING:
-		return FALSE; // FALSE to allow changing
-	case TCN_SELCHANGE:
-		return 0; // return value doesn't matter
-	}
-
-	return 0;
-}
-
 BOOL MainWindow::WmCreate(HWND hwnd, LPCREATESTRUCT cs)
 {
 	if (!win32::ImagePainter_Create(hwnd))
@@ -156,6 +48,121 @@ void MainWindow::WmClose(HWND hwnd)
 	(void)DestroyWindow(hwnd);
 }
 
+void MainWindow::WmDestroy(HWND hwnd)
+{
+	PostQuitMessage(0);
+}
+
+void MainWindow::WmEndSession(HWND hwnd, BOOL fEnding)
+{
+	// TODO:
+}
+
+void MainWindow::WmCommand(HWND hwnd, int id, HWND hwndCtrl, UINT codeNotify)
+{
+	if (hwndCtrl != (HWND)0 && hwndCtrl != (HWND)1)
+	{
+		// actual control window
+		return;
+	}
+
+	// Menu or Accelerator
+	switch (id)
+	{
+	case IDM_FILE_NEW_TAB:
+	{
+		//static int fuck = 1;
+		//wchar_t buf[20] = {};
+		//swprintf(buf, L"files (%d)", ++fuck);
+		tabbar_.Append(L"files (0)");
+		break;
+	}
+	case IDM_CLOSE_TAB:
+	{
+		int idx = tabbar_.right_click_idx_;
+		if (idx == -1)
+			// Coming from Ctrl+W if invalid right_click_idx_
+			if (-1 == (idx = TabCtrl_GetCurSel(tabbar_.hwnd_)))
+				break;
+		tabbar_.right_click_idx_ = -1;
+		tabbar_.Remove(idx);
+		break;
+	}
+	case IDM_FILE_OPEN_FILES:
+	case IDM_FILE_OPEN_DIRS:
+	{
+		std::vector<osstring> * results;
+		bool foldersOnly = id == IDM_FILE_OPEN_DIRS;
+		if (mmcs::SelectFilesWindow(&results, foldersOnly, true))
+		{
+			for (const auto & x : *results)
+			{
+				MessageBoxW(NULL, x.c_str(), L"", MB_OK);
+			}
+			delete results;
+		}
+		break;
+	}
+	case IDM_FILE_EXIT:
+		(void)DestroyWindow(hwnd);
+		break;
+	case IDM_VIEW_TOGGLE_DARK_MODE:
+	{
+		HMENU hMenu = GetMenu(hwnd);
+		MENUITEMINFOW info;
+		info.cbSize = sizeof(info);
+		info.fMask = MIIM_STATE;
+		if (!GetMenuItemInfoW(hMenu, IDM_VIEW_TOGGLE_DARK_MODE, FALSE, &info))
+			return;
+		if (info.fState & MFS_CHECKED)
+			info.fState &= ~MFS_CHECKED;
+		else
+			info.fState |= MFS_CHECKED;
+		if (!SetMenuItemInfoW(hMenu, IDM_VIEW_TOGGLE_DARK_MODE, FALSE, &info))
+			return;
+		(void)DrawMenuBar(hwnd);
+		break;
+	}
+	case IDM_HELP_WEBSITE:
+		mmcs::OpenUrlAsync("https://mlfaw.com/mmcs", false);
+		break;
+	case IDM_HELP_GITHUB:
+		mmcs::OpenUrlAsync("https://github.com/mlfaw/mmcs", false);
+		break;
+	case IDM_HELP_CHANGELOG:
+	{
+		const oschar changelogtxt[] = _OS("/changelog.txt");
+		auto len = osstrlen(mmcs::ExeDir) + sizeof(changelogtxt);
+		oschar * changelogpath = (oschar *)malloc(len * sizeof(oschar));
+		if (!changelogpath)
+			return;
+		osstrcpy(changelogpath, mmcs::ExeDir);
+		osstrcat(changelogpath, changelogtxt);
+		if (!mmcs::OpenFileAsync(changelogpath, true))
+			free(changelogpath);
+		break;
+	}
+	case IDM_HELP_REGISTER_AS_DEFAULT:
+		win32::RegisterAsDefault_Launch();
+		break;
+	case IDM_HELP_ABOUT:
+		break;
+	}
+}
+
+LRESULT MainWindow::WmNotify(HWND hwnd, int ctrlId, NMHDR * info)
+{
+	switch (info->code)
+	{
+	case TCN_SELCHANGING:
+		return FALSE; // FALSE to allow changing
+	case TCN_SELCHANGE:
+		return 0; // return value doesn't matter
+	}
+
+	return 0;
+}
+
 // NOTE: This handles all drop-files from child windows.
 // A child window can handle drop-files that target them if they
 // have the extended window style WS_EX_ACCEPTFILES
@@ -169,24 +176,9 @@ void MainWindow::WmDropFiles(HWND hwnd, HDROP hdrop)
 	DragFinish(hdrop);
 }
 
-void MainWindow::WmShowWindow(HWND hwnd, BOOL fShow, UINT status)
-{
-
-}
-
-void MainWindow::WmEndSession(HWND hwnd, BOOL fEnding)
-{
-	PostQuitMessage(0);
-}
-
-void MainWindow::WmDestroy(HWND hwnd)
-{
-	PostQuitMessage(0);
-}
-
 static inline void imageFit(
-	Gdiplus::RectF & destRect,
-	Gdiplus::RectF & imgRect,
+	RECT & destRect,
+	RECT & imgRect,
 	double imgW,
 	double imgH,
 	double clW,
@@ -212,93 +204,19 @@ static inline void imageFit(
 		destY = 0;
 	}
 
+#if 0
 	destRect = Gdiplus::RectF(
 		(Gdiplus::REAL)destX,
 		(Gdiplus::REAL)destY,
 		(Gdiplus::REAL)destW,
 		(Gdiplus::REAL)destH
 	);
+#endif
 }
 
-void MainWindow::GetImageLocation(
-	Gdiplus::RectF & destRect,
-	Gdiplus::RectF & imgRect,
-	double imgW,
-	double imgH,
-	double clW,
-	double clH
-)
-{
-	if (fitted_)
-	{
-		imageFit(
-			destRect,
-			imgRect,
-			imgW,
-			imgH,
-			clW,
-			clH
-		);
-		return;
-	}
-
-
-}
-
-void MainWindow::WmPaint(HWND hwnd)
-{
-	if (!image_)
-	{
-		image_ = Gdiplus::Image::FromFile(L"C:\\code\\mmcs\\900KB.jpg", FALSE);
-	}
-
-	PAINTSTRUCT ps;
-	HDC hdc = BeginPaint(hwnd, &ps);
-	if (!hdc) return;
-
-	if (image_)
-	{
-		RECT rc;
-		GetClientRect(hwnd, &rc);
-
-		Gdiplus::RectF destRect;
-		Gdiplus::RectF imgRect;
-		Gdiplus::Unit imgUnit;
-		image_->GetBounds(&imgRect, &imgUnit);
-
-		GetImageLocation(
-			destRect,
-			imgRect,
-			imgRect.Width,
-			imgRect.Height,
-			(double)rc.right,
-			(double)rc.bottom
-		);
-
-		Gdiplus::Graphics pGraphics(hdc);
-
-		pGraphics.DrawImage(
-			image_,
-			destRect,
-			imgRect,
-			imgUnit,
-			(const Gdiplus::ImageAttributes *)NULL
-		);
-	}
-
-	(void)EndPaint(hwnd, &ps);
-}
-
-#ifndef SWP_STATECHANGED
 #define SWP_STATECHANGED 0x8000
-#endif
-#ifndef SWP_NOCLIENTSIZE
 #define SWP_NOCLIENTSIZE 0x0800
-#endif
-#ifndef SWP_NOCLIENTMOVE
 #define SWP_NOCLIENTMOVE 0x1000
-#endif
-
 void MainWindow::WmWindowPosChanged(HWND hwnd, const LPWINDOWPOS pos)
 {
 	LONG_PTR style = GetWindowLongPtrW(hwnd, GWL_STYLE);
@@ -373,16 +291,6 @@ void MainWindow::WmSize(HWND hwnd, UINT state, int cx, int cy)
 	(void)EndDeferWindowPos(hdwp);
 }
 
-void MainWindow::WmMouseWheel(HWND hwnd, int xPos, int yPos, int zDelta, UINT fwKeys)
-{
-	fitted_ = !fitted_;
-	if (fitted_)
-		return;
-
-
-	return;
-}
-
 LRESULT CALLBACK MainWindow::WndProc(
 	HWND hwnd,
 	UINT msg,
@@ -405,18 +313,14 @@ LRESULT CALLBACK MainWindow::WndProc(
 	{
 		switch (msg)
 		{
-			HANDLE_MSG(hwnd, WM_COMMAND,    mw->WmCommand);
 			HANDLE_MSG(hwnd, WM_CREATE,     mw->WmCreate);
 			HANDLE_MSG(hwnd, WM_CLOSE,      mw->WmClose);
-			HANDLE_MSG(hwnd, WM_DROPFILES,  mw->WmDropFiles);
-			HANDLE_MSG(hwnd, WM_SHOWWINDOW, mw->WmShowWindow);
-			HANDLE_MSG(hwnd, WM_ENDSESSION, mw->WmEndSession);
 			HANDLE_MSG(hwnd, WM_DESTROY,    mw->WmDestroy);
-			//HANDLE_MSG(hwnd, WM_PAINT,      mw->WmPaint);
-			HANDLE_MSG(hwnd, WM_WINDOWPOSCHANGED, mw->WmWindowPosChanged);
-			//HANDLE_MSG(hwnd, WM_SIZE,       mw->WmSize); // handled in WmWindowPosChanged()
-			HANDLE_MSG(hwnd, WM_MOUSEWHEEL, mw->WmMouseWheel);
+			HANDLE_MSG(hwnd, WM_ENDSESSION, mw->WmEndSession);
+			HANDLE_MSG(hwnd, WM_COMMAND,    mw->WmCommand);
 			HANDLE_MSG(hwnd, WM_NOTIFY,     mw->WmNotify);
+			HANDLE_MSG(hwnd, WM_DROPFILES,  mw->WmDropFiles);
+			HANDLE_MSG(hwnd, WM_WINDOWPOSCHANGED, mw->WmWindowPosChanged);
 		}
 	}
 
@@ -440,34 +344,6 @@ int MainWindow::Run()
 	}
 	return (int)msg.wParam;
 }
-
-#if 0
-HACCEL MainWindow::CreateAccelerators()
-{
-	//typedef struct tagACCEL {
-	//    BYTE   fVirt; /* Also called the flags field */
-	//    WORD   key;
-	//    WORD   cmd;
-	//} ACCEL, *LPACCEL;
-
-	// https://docs.microsoft.com/en-us/windows/desktop/inputdev/virtual-key-codes
-
-	ACCEL accels[] = {
-		{ // Ctrl+t = New Tab
-			FCONTROL | FVIRTKEY,
-			0x54, // T
-			IDM_FILE_NEW_TAB
-		},
-		{ // Ctrl+w = Close Tab
-			FCONTROL | FVIRTKEY,
-			0x57, // W
-			IDM_CLOSE_TAB
-		},
-	};
-
-	return CreateAcceleratorTableW(accels, sizeof(accels) / sizeof(accels[0]));
-}
-#endif
 
 bool MainWindow::Init(int w, int h, int x, int y, bool maximize)
 {

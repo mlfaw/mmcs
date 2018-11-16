@@ -15,8 +15,11 @@
 #include "win32_gui.hpp"
 #include "generated/win32_resource.h"
 #include "win32_hinstance.h"
+
+#if MMCS_USE_GDIP
 #define GDIPVER 0x0110
 #include <gdiplus.h>
+#endif
 
 namespace win32 {
 
@@ -35,6 +38,7 @@ static bool GuiInit_inner()
 	if (!(DefaultMessageFont = CreateFontIndirectW(&ncMetrics.lfMessageFont)))
 		return false;
 
+#if MMCS_USE_GDIP
 	Gdiplus::GdiplusStartupInput gdiplusStartupInput;
 	auto status = Gdiplus::GdiplusStartup(
 		&gdiplusToken,
@@ -43,6 +47,7 @@ static bool GuiInit_inner()
 	);
 	if (status != Gdiplus::Ok)
 		return false;
+#endif
 
 	if (!(MainWindowAccelerators = LoadAcceleratorsW(HINST_THISCOMPONENT, MAKEINTRESOURCEW(IDA_MAIN_WINDOW))))
 		return false;
@@ -64,8 +69,10 @@ void GuiUnInit()
 {
 	if (DefaultMessageFont)
 		(void)DeleteObject((HGDIOBJ)DefaultMessageFont);
+#if MMCS_USE_GDIP
 	if (gdiplusToken)
 		Gdiplus::GdiplusShutdown(gdiplusToken);
+#endif
 }
 
 // Use our system font please

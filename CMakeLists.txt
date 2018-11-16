@@ -68,6 +68,7 @@ if (WIN32)
 		-D_WIN32_WINNT=0x0601
 		-DSQLITE_WIN32_GETVERSIONEX=0 # something something deprecation warnings on GetVersionEx[AW]
 		-DGDIPVER=0x0110 # GDI+ 1.1 for the Graphics->DrawImage() func we use
+		-DMMCS_USE_GDIP=0 # I don't think I'll use GDI+ but I'll keep the code and disabled with this flag for now...
 	)
 	list(APPEND mmcs_libs d3d11 d2d1 dxgi dwrite)
 	file(GLOB win_sources "src/msw_*" "src/win32_*")
