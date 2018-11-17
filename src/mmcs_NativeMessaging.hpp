@@ -2,8 +2,9 @@
 #pragma once
 #include "mmcs_os.hpp"
 namespace mmcs {
+namespace NativeMessaging {
 
-bool NativeMessaging_IsMode(int argc, oschar ** argv);
-int NativeMessaging_Handler();
+bool Handler(int argc, oschar ** argv);
 
+}
 }

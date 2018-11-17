@@ -3,6 +3,7 @@
 #include "mmcs_StringHelpers.hpp"
 
 namespace mmcs {
+namespace NativeMessaging {
 
 static const oschar * allowedExtensions[] = {
 	_OS("chrome-extension://[extensionID]"),
@@ -11,7 +12,7 @@ static const oschar * allowedExtensions[] = {
 static const int allowedExtensionsCount =
 	sizeof(allowedExtensions) / sizeof(allowedExtensions[0]);
 
-bool NativeMessaging_IsMode(int argc, oschar ** argv)
+static bool IsMode(int argc, oschar ** argv)
 {
 	// Firefox:
 	//   mmcs C:\path\to\native-messaging\mmcs.json ping_pong@example.org
@@ -42,10 +43,12 @@ bool NativeMessaging_IsMode(int argc, oschar ** argv)
 	return true;
 }
 
-int NativeMessaging_Handler()
+bool Handler(int argc, oschar ** argv)
 {
-
-	return 1;
+	if (!IsMode(argc, argv))
+		return false;
+	return true;
 }
 
+}
 }

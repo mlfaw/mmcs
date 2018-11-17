@@ -93,9 +93,8 @@ int main(int argc, oschar ** argv)
 #endif
 	}
 
-	if (mmcs::NativeMessaging_IsMode(argc, argv)) {
-		return mmcs::NativeMessaging_Handler();
-	}
+	if (mmcs::NativeMessaging::Handler(argc, argv))
+		return 0;
 
 #ifdef _WIN32
 	if (!win32::GuiInit())
