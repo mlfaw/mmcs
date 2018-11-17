@@ -5,8 +5,12 @@
 #include <windowsx.h> // Button_GetCheck()
 #include "generated/win32_resource.h"
 #include "win32_hinstance.h"
+#include "win32_misc.hpp" // win32::GetExePath()
 
 namespace win32 {
+namespace RegisterAsDefault {
+
+static const wchar_t registerAsDefaultArg[] = L"mmcs://RegisterAsDefault";
 
 struct registerData {
 	bool jpg;
@@ -26,35 +30,34 @@ static INT_PTR CALLBACK DialogProc(
 	_In_ LPARAM lParam
 )
 {
-	HICON hIcon;
-	struct registerData * d;
 	switch (msg) {
 	case WM_INITDIALOG:
-		hIcon = LoadIconW(HINST_THISCOMPONENT, MAKEINTRESOURCEW(IDI_MMCS_ICON));
+	{
+		HICON hIcon = LoadIconW(HINST_THISCOMPONENT, MAKEINTRESOURCEW(IDI_MMCS_ICON));
 		(void)SendMessage(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
 		(void)SendMessage(hwnd, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
 		return TRUE;
+	}
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
 		case IDOK:
-			d = &userSpecified;
-			d->jpg = Button_GetCheck(GetDlgItem(hwnd, IDC_JPG));
-			d->png = Button_GetCheck(GetDlgItem(hwnd, IDC_PNG));
-			d->gif = Button_GetCheck(GetDlgItem(hwnd, IDC_GIF));
-			d->mp4 = Button_GetCheck(GetDlgItem(hwnd, IDC_MP4));
-			d->mkv = Button_GetCheck(GetDlgItem(hwnd, IDC_MKV));
-			d->webm = Button_GetCheck(GetDlgItem(hwnd, IDC_WEBM));
-			(void)EndDialog(hwnd, 1);
+			userSpecified.jpg = Button_GetCheck(GetDlgItem(hwnd, IDC_JPG));
+			userSpecified.png = Button_GetCheck(GetDlgItem(hwnd, IDC_PNG));
+			userSpecified.gif = Button_GetCheck(GetDlgItem(hwnd, IDC_GIF));
+			userSpecified.mp4 = Button_GetCheck(GetDlgItem(hwnd, IDC_MP4));
+			userSpecified.mkv = Button_GetCheck(GetDlgItem(hwnd, IDC_MKV));
+			userSpecified.webm = Button_GetCheck(GetDlgItem(hwnd, IDC_WEBM));
+			(void)EndDialog(hwnd, IDOK);
 			return TRUE;
 		case IDCANCEL:
-			(void)EndDialog(hwnd, 2);
+			(void)EndDialog(hwnd, IDCANCEL);
 			return TRUE;
 		}
 	}
 	return FALSE;
 }
 
-int RegisterAsDefault_Handler()
+static void real_handler()
 {
 	INT_PTR ret = DialogBoxParamW(
 		HINST_THISCOMPONENT,
@@ -64,24 +67,30 @@ int RegisterAsDefault_Handler()
 		NULL // dwInitParam
 	);
 
-	if (ret == 2) return 0; // cancel button
-	if (ret != 1) return 1; // don't know...
-	// ok button
+	if (ret != IDOK)
+		return;
 
-	// check content inside userSpecified
-
-	return 0;
+	// check content in userSpecified
 }
 
-void RegisterAsDefault_Launch()
+bool Handler(const wchar_t * lpCmdLine)
+{
+	if (wcscmp(registerAsDefaultArg, lpCmdLine) != 0)
+		return false;
+	real_handler();
+	return true;
+}
+
+void Launch()
 {
 	SHELLEXECUTEINFOW info = {0};
 	info.cbSize = sizeof(info);
 	info.lpVerb = L"runas";
-	info.lpFile = mmcs::ExePath;
-	info.lpParameters = REGISTER_AS_DEFAULT_ARG;
+	info.lpFile = win32::GetExePath();
+	info.lpParameters = registerAsDefaultArg;
 	info.nShow = SW_NORMAL;
 	(void)ShellExecuteExW(&info);
 }
 
+}
 }

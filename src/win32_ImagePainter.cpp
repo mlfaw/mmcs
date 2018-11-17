@@ -45,7 +45,7 @@ static ID2D1SolidColorBrush * pBlackBrush = NULL;
 
 namespace win32 {
 
-static int nxtidx = 2;
+static int nxtidx = 0;
 static const char * ff[] = {
 	"C:\\code\\mmcs\\235KB.png",
 	"C:\\code\\mmcs\\900KB_2.jpg",
@@ -444,7 +444,7 @@ static void IpWmMouseWheel(HWND hwnd, int xPos, int yPos, int zDelta, UINT fwKey
 }
 #endif
 
-static LRESULT CALLBACK IpWindowProc(
+LRESULT CALLBACK IpWindowProc(
 	HWND hwnd,
 	UINT msg,
 	WPARAM wParam,
@@ -482,24 +482,6 @@ static LRESULT CALLBACK IpWindowProc(
 
 bool ImagePainter_Create(HWND hParent)
 {
-	HINSTANCE hInstance = HINST_THISCOMPONENT;
-
-	WNDCLASSEXW wc;
-	wc.cbSize = sizeof(wc);
-	wc.style = 0;
-	wc.lpfnWndProc = IpWindowProc;
-	wc.cbClsExtra = 0;
-	wc.cbWndExtra = 0;
-	wc.hInstance = hInstance;
-	wc.hIcon = NULL;
-	wc.hCursor = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
-	wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-	wc.lpszMenuName = NULL;
-	wc.lpszClassName = L"ImagePainter";
-	wc.hIconSm = NULL;
-	if (!RegisterClassExW(&wc))
-		return false;
-
 	HWND hwnd = CreateWindowExW(
 		0, //WS_EX_ACCEPTFILES,
 		L"ImagePainter",
@@ -511,7 +493,7 @@ bool ImagePainter_Create(HWND hParent)
 		1080, // height
 		hParent,
 		(HMENU)ID_IMAGEPAINTER,
-		hInstance,
+		HINST_THISCOMPONENT,
 		NULL // lpParam
 	);
 	if (!hwnd)

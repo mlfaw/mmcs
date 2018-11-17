@@ -15,20 +15,20 @@
 #include "mmcs_globals.hpp"
 #include "mmcs_file.hpp"
 #include "mmcs_NativeMessaging.hpp"
+#include "mmcs_ScopedFree.hpp"
 #include <string.h> // strrchr()/wcsrchr()
 #include <stdlib.h> // malloc(), free()
-#include <stddef.h> // ptrdiff_t
 
 #ifdef _WIN32
 #include <Windows.h>
 #include <shellapi.h> // CommandLineToArgvW()
-#include <Objbase.h> // CoInitializeEx()
 #include <winnt.h> // NtCurrentTeb()
 #include <winternl.h> // PTEB, PPEB
 #include "win32_RegisterAsDefault.hpp"
 #include "win32_MainWindow.hpp"
 #include "win32_gui.hpp"
 #include "msw_misc.hpp" // NT_MAX_PATH
+#include "win32_misc.hpp" // win32::GetExePath()
 #else
 #include <unistd.h> // readlink()
 #include <linux/limits.h> // PATH_MAX
@@ -38,65 +38,44 @@
 
 static const oschar portable_filename[] = _OS("mmcs_portable.txt");
 
-static bool get_exe_and_dir(oschar ** exe_out, oschar ** dir_out)
+static oschar * getExeDir()
 {
-	oschar * exe = NULL;
-	oschar * dir = NULL;
-	oschar * rchr;
-	ptrdiff_t nChars;
-
 #ifdef _WIN32
-	oschar * bs; // backslash
-
-	exe = _wcsdup(
-		NtCurrentTeb()->ProcessEnvironmentBlock->ProcessParameters->ImagePathName.Buffer
-	);
-	if (!exe) goto err;
-#else
-	ssize_t nbytes;
-	// TODO whenever needed:
-	// https://stackoverflow.com/questions/1023306/finding-current-executables-path-without-proc-self-exe
+	return mmcs::file::getDir(win32::GetExePath());
+#elif defined(__linux__)
+	const char proc_exe[] = "/proc/self/exe";
 	struct stat s;
-	ssize_t lsize;
-	if (lstat("/proc/self/exe", &s) == -1) return false;
-	lsize = s.st_size ? s.st_size : PATH_MAX;
-	exe = (oschar *)malloc(lsize + 1);
-	if (!exe) return false;
-	nbytes = readlink("/proc/self/exe", exe, lsize);
-	if (nbytes == -1) goto err;
+	if (lstat(proc_exe, &s) == -1) return NULL;
+	ssize_t lsize = s.st_size ? s.st_size : PATH_MAX;
+	char * exe = (char *)malloc(lsize + 1);
+	if (!exe) return NULL;
+	ssize_t nbytes = readlink(proc_exe, exe, lsize);
+	if (nbytes == -1) {
+		free(exe);
+		return NULL;
+	}
 	exe[nbytes] = 0;
 	if (s.st_size == 0) { // resize buffer from PATH_MAX
 		char * x = (char *)realloc(exe, nbytes+1);
-		if (!x) goto err;
-		exe = x;
+		if (x) exe = x;
 	}
-#endif
 
-	rchr = osstrrchr(exe, _OS('/'));
-#ifdef _WIN32
-	bs = osstrrchr(exe, _OS('\\'));
-	rchr = (rchr > bs) ? rchr : bs;
-#endif
-	if (!rchr) goto err; // nice
-	nChars = rchr - exe;
-	dir = (oschar *)malloc((nChars + 1) * sizeof(oschar));
-	if (!dir) goto err; // double nice
-	memcpy(dir, exe, nChars * sizeof(oschar));
-	dir[nChars] = 0;
-	*exe_out = exe;
-	*dir_out = dir;
-	return true;
-
-err:
+	char * dir = mmcs::file::getDir(exe);
 	free(exe);
-	return false;
+	return dir;
+#endif
+
+	return NULL;
 }
 
-static int main_inner(int argc, oschar ** argv)
+int main(int argc, oschar ** argv)
 {
+	if (!(mmcs::ExeDir = getExeDir()))
+		return 1;
+	mmcs::ScopedFree sf_ExeDir(mmcs::ExeDir);
+
 	osfile hExeDir = mmcs::file::simpleOpen(mmcs::ExeDir, "rdP");
 	if (hExeDir != (osfile)-1) {
-		// TODO: Fix me
 		osfile hPortable = mmcs::file::simpleRelativeOpen(hExeDir, portable_filename, "rM");
 		if (hPortable == (osfile)-1) {
 			mmcs::isPortable = false;
@@ -138,55 +117,27 @@ static int main_inner(int argc, oschar ** argv)
 #endif
 }
 
-#if 0
-#include <tls.h>
-#define CURL_STATICLIB
-#include <curl/curl.h>
-#endif
-
-int main(int argc, oschar ** argv)
-{
-	// global variables in commandline.hpp/cpp
-	mmcs::argc = argc;
-	mmcs::argv = argv;
-
-	//osfile curdir;
-
-	if (!get_exe_and_dir(&mmcs::ExePath, &mmcs::ExeDir))
-		return 1; // TODO: log
-
-	int ret = main_inner(argc, argv);
-
-	// Cleanup...
-	free(mmcs::ExePath);
-	free(mmcs::ExeDir);
-
-	return ret;
-}
-
-
 #ifdef _WIN32
 // Save the original current-directory then set the current-directory to the system-drive.
 // This is done so a HANDLE to the original current-directory is not kept open.
 // (HANDLE kept open = can't delete directory / eject drive)
-// TODO: malloc the string for OriginalWorkingDirectory
-//       nChars = GetCurrentDirectory(0, NULL);
-//       malloc((nChars + 1) * sizeof(wchar_t));
-//       etc...
 bool reset_current_directory()
 {
 	DWORD nChars;
 	wchar_t windows_dir[MAX_PATH]; // MAX_PATH (260) is intentional
 	wchar_t system_drive[4] = {0, L':', L'\\', 0};
-	nChars = GetCurrentDirectoryW(NT_MAX_PATH + 1, mmcs::OriginalWorkingDirectory);
-	if (!nChars || nChars > NT_MAX_PATH + 1)
-		return false; // TODO: Log?
+	if (!(nChars = GetCurrentDirectoryW(0, NULL)))
+		return false;
+	if (!(mmcs::OriginalWorkingDirectory = (wchar_t *)malloc(nChars)))
+		return false;
+	if (!GetCurrentDirectoryW(nChars, mmcs::OriginalWorkingDirectory))
+		return false;
 	nChars = GetSystemWindowsDirectoryW(windows_dir, MAX_PATH);
-	if (!nChars || nChars > NT_MAX_PATH + 1)
-		return false; // TODO: Log?
+	if (!nChars || nChars > MAX_PATH)
+		return false;
 	system_drive[0] = windows_dir[0];
 	if (!SetCurrentDirectoryW(system_drive))
-		return false; // TODO: Log?
+		return false;
 	return true;
 }
 
@@ -199,37 +150,25 @@ int CALLBACK wWinMain(
 {
 	int argc = 1;
 	wchar_t ** argv = NULL;
-	static wchar_t * fake_argv[2] = {NULL, NULL};
+	static wchar_t * fake_argv[2] = {L"mmcs.exe", NULL};
 
 	// Unused arguments.
+	(void)hInstance;
 	(void)hPrevInstance;
 	(void)nCmdShow;
 
-	//mmcs::hInstance = hInstance;
-
 	if (!reset_current_directory()) return 1;
 
-	// Skip needless allocations and directly check command-line
-	if (wcscmp(lpCmdLine, REGISTER_AS_DEFAULT_ARG) == 0)
-		return win32::RegisterAsDefault_Handler();
+	if (win32::RegisterAsDefault::Handler(lpCmdLine))
+		return 0;
 
 	// Avoid allocating since there's no args... little things add up...
-	if (!*lpCmdLine) {
+	if (!*lpCmdLine)
 		argv = fake_argv;
-		argv[0] = mmcs::ExePath;
-	}
 	else if (!(argv = CommandLineToArgvW(GetCommandLineW(), &argc)))
 		return 1; // TODO: Log?
 
-	// Some init
-	// ShellExecute wants COM to be initialized...
-	if (S_OK != CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE))
-		return 1; // TODO: Log?
-
 	int ret = main(argc, argv);
-
-	// Some uninit
-	CoUninitialize(); // unnecessary but I'll keep it...
 
 	if (argv != fake_argv)
 		(void)LocalFree((HLOCAL)argv);

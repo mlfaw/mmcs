@@ -67,10 +67,8 @@ if (WIN32)
 		-DWINVER=0x0601
 		-D_WIN32_WINNT=0x0601
 		-DSQLITE_WIN32_GETVERSIONEX=0 # something something deprecation warnings on GetVersionEx[AW]
-		-DGDIPVER=0x0110 # GDI+ 1.1 for the Graphics->DrawImage() func we use
-		-DMMCS_USE_GDIP=0 # I don't think I'll use GDI+ but I'll keep the code and disabled with this flag for now...
 	)
-	list(APPEND mmcs_libs d3d11 d2d1 dxgi dwrite)
+	list(APPEND mmcs_libs Comctl32 WS2_32 ntdll d3d11 d2d1 dxgi dwrite)
 	file(GLOB win_sources "src/msw_*" "src/win32_*")
 	list(APPEND mmcs_sources
 		${win_sources}
@@ -83,8 +81,6 @@ if (WIN32)
 	configure_file(src/gen_win32.in.manifest    "${GEN_FOLDER}/win32.manifest")
 	# so win32_resource can find the icon...
 	configure_file("${CMAKE_SOURCE_DIR}/resources/mmcs.ico" "${GEN_FOLDER}/mmcs.ico" COPYONLY)
-
-	list(APPEND mmcs_libs Comctl32 WS2_32 ntdll gdiplus)
 else()
 	set(THREADS_PREFER_PTHREAD_FLAG ON)
 	find_package(Threads REQUIRED)

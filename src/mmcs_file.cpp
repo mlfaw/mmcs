@@ -1,15 +1,17 @@
 /*{REPLACEMEWITHLICENSE}*/
 #include "mmcs_file.hpp"
-#include <string.h> // strchr()
+#include <string.h> // strchr(), memcpy()
+#include <stdlib.h> // malloc(), free()...
+#include <stddef.h> // ptrdiff_t
 
 #ifdef _WIN32
 //#include <shlwapi.h>
 #include <winternl.h> // NtCreateFile(), RtlInitUnicodeString(), InitializeObjectAttributes()
 #else
 #include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <fcntl.h> // open()
+#include <sys/stat.h> // fstat()
+#include <unistd.h> // close()
+#include <fcntl.h> // open(), openat()
 #endif
 
 namespace mmcs {
@@ -33,7 +35,7 @@ static bool parse_flags_win32(
 	DWORD * out_flagsAndAttr
 )
 {
-	DWORD access = 0;
+	DWORD access = SYNCHRONIZE; // TODO: is there any problem with using SYNCHONIZE on everything?
 	DWORD shareMode = 0;
 	DWORD creationDisposition = OPEN_EXISTING;
 	DWORD flagsAndAttr = 0;
@@ -46,7 +48,7 @@ static bool parse_flags_win32(
 	if (strchr(in_flags, 'o')) create = false;
 	if (strchr(in_flags, 'c')) create = true;
 	if (strchr(in_flags, 'y')) always = true;
-	if (strchr(in_flags, 'M')) access = 0;
+	if (strchr(in_flags, 'M')) access = SYNCHRONIZE | FILE_READ_ATTRIBUTES; // CreateFile(access=0) uses these flags...
 	if (strchr(in_flags, 'V')) flagsAndAttr |= FILE_FLAG_OVERLAPPED;
 	if (strchr(in_flags, 'R')) shareMode |= FILE_SHARE_READ;
 	if (strchr(in_flags, 'W')) shareMode |= FILE_SHARE_WRITE;
@@ -161,14 +163,15 @@ osfile simpleRelativeOpen(osfile dir, const oschar * fileName, const char * flag
 	DWORD attr = 0;
 	DWORD createOptions = 0;
 	if (flagsAndAttr & FILE_FLAG_BACKUP_SEMANTICS) {
-		createOptions |= FILE_DIRECTORY_FILE;
+		createOptions |= FILE_DIRECTORY_FILE; // | FILE_OPEN_FOR_BACKUP_INTENT;
 		attr |= FILE_ATTRIBUTE_DIRECTORY;
+		access = FILE_LIST_DIRECTORY | FILE_TRAVERSE;
 	} else {
 		createOptions |= FILE_NON_DIRECTORY_FILE;
 		attr |= FILE_ATTRIBUTE_NORMAL;
 	}
 	if (flagsAndAttr & FILE_FLAG_SEQUENTIAL_SCAN) createOptions |= FILE_SEQUENTIAL_ONLY;
-	if (flagsAndAttr & FILE_FLAG_OVERLAPPED) createOptions |= FILE_SYNCHRONOUS_IO_NONALERT;
+	if (!(flagsAndAttr & FILE_FLAG_OVERLAPPED)) createOptions |= FILE_SYNCHRONOUS_IO_NONALERT;
 	
 	UNICODE_STRING us;
 	RtlInitUnicodeString(&us, fileName);
@@ -291,23 +294,37 @@ bool simpleRead(osfile f, void * buf, uint32_t size)
 }
 
 // Read entire file. A 0x00 byte is appended to simply string usage. The 0x00 byte is not included in outsize.
-// 
-bool slurp(osfile f, void ** outbuf, uint32_t * outsize)
+char * slurp(osfile f, uint32_t * outsize)
 {
 	uint64_t size;
-	if (!getSize(f, &size)) return false;
-	if (size > (0xFFFFFFFF-1)) return false;
+	if (!getSize(f, &size)) return NULL;
+	if (size > (0xFFFFFFFF-1)) return NULL;
 	uint32_t newSize = (uint32_t)size;
 	char * buf = (char *)malloc(newSize + 1);
-	if (!buf) return false;
+	if (!buf) return NULL;
 	if (!simpleRead(f, buf, newSize)) {
 		free(buf);
-		return false;
+		return NULL;
 	}
 	buf[newSize] = 0;
 	*outsize = newSize;
-	*outbuf = (void *)buf;
-	return true;
+	return buf;
+}
+
+oschar * getDir(const oschar * path)
+{
+	const oschar * rchr = osstrrchr(path, _OS('/'));
+#ifdef _WIN32
+	const oschar * bs = osstrrchr(path, _OS('\\'));
+	rchr = (rchr > bs) ? rchr : bs;
+#endif
+	if (!rchr) return NULL;
+	ptrdiff_t nChars = rchr - path;
+	oschar * dir = (oschar *)malloc((nChars + 1) * sizeof(oschar));
+	if (!dir) return NULL;
+	memcpy(dir, path, nChars * sizeof(oschar));
+	dir[nChars] = 0;
+	return dir;
 }
 
 }

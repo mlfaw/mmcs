@@ -1,11 +1,11 @@
 /*{REPLACEMEWITHLICENSE}*/
 #pragma once
 
-#define REGISTER_AS_DEFAULT_ARG (L"mmcs://RegisterAsDefault")
-
 namespace win32 {
+namespace RegisterAsDefault {
 
-void RegisterAsDefault_Launch();
-int RegisterAsDefault_Handler();
+void Launch();
+bool Handler(const wchar_t * lpCmdLine);
 
+}
 }

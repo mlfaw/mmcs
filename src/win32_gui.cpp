@@ -16,18 +16,61 @@
 #include "generated/win32_resource.h"
 #include "win32_hinstance.h"
 #include <commctrl.h> // InitCommonControlsEx()
-
-#if MMCS_USE_GDIP
-#define GDIPVER 0x0110
-#include <gdiplus.h>
-#endif
+#include "win32_ImagePainter.hpp"
+#include "win32_MainWindow.hpp"
+#include <Objbase.h> // CoInitializeEx()
 
 namespace win32 {
 
 HACCEL MainWindowAccelerators = NULL;
-
-static ULONG_PTR gdiplusToken = 0;
 static HFONT DefaultMessageFont = NULL;
+static HRESULT comInitStatus = S_FALSE;
+
+// This only attempts to register classes once instead of on each MainWindow or ImagePainter creation.
+// Also LoadIconW() and LoadCursorW() results can be shared...
+// The downside is that class WndProcs need to be exported and pulled in from headers...
+static bool registerClasses()
+{
+	HINSTANCE hInstance = HINST_THISCOMPONENT;
+	HCURSOR cursorArrow = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
+	HICON iconMMCS = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_MMCS_ICON));
+	WNDCLASSEXW wc;
+
+	if (!cursorArrow) return false;
+	if (!iconMMCS) return false;
+
+	wc.cbSize = sizeof(wc);
+	wc.style = CS_HREDRAW | CS_VREDRAW;
+	wc.lpfnWndProc = win32::MainWindow::WndProc;
+	wc.cbClsExtra = 0;
+	wc.cbWndExtra = 0;
+	wc.hInstance = hInstance;
+	wc.hIcon = iconMMCS;
+	wc.hCursor = cursorArrow;
+	wc.hbrBackground = (HBRUSH)(COLOR_GRAYTEXT + 1);
+	wc.lpszMenuName = MAKEINTRESOURCEW(IDM_MAIN_MENU);
+	wc.lpszClassName = L"MainWindow";
+	wc.hIconSm = NULL; // If NULL, it will try to get a smaller icon from hIcon
+	if (!RegisterClassExW(&wc))
+		return false;
+
+	wc.cbSize = sizeof(wc);
+	wc.style = 0;
+	wc.lpfnWndProc = win32::IpWindowProc;
+	wc.cbClsExtra = 0;
+	wc.cbWndExtra = 0;
+	wc.hInstance = hInstance;
+	wc.hIcon = NULL;
+	wc.hCursor = cursorArrow;
+	wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+	wc.lpszMenuName = NULL;
+	wc.lpszClassName = L"ImagePainter";
+	wc.hIconSm = NULL;
+	if (!RegisterClassExW(&wc))
+		return false;
+
+	return true;
+}
 
 static bool GuiInit_inner()
 {	
@@ -37,6 +80,15 @@ static bool GuiInit_inner()
 	if (!InitCommonControlsEx(&controls))
 		return false; // TODO: Log error
 
+	// ShellExecute wants COM to be initialized...
+	// TODO: Windows::Foundation::Initialize() for Windows 10 to init instead?
+	comInitStatus = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+	if (comInitStatus != S_OK)
+		return false;
+
+	if (!registerClasses())
+		return false;
+
 	// Setup the system font to use...
 	NONCLIENTMETRICSW ncMetrics;
 	ncMetrics.cbSize = sizeof(ncMetrics);
@@ -44,17 +96,6 @@ static bool GuiInit_inner()
 		return false;
 	if (!(DefaultMessageFont = CreateFontIndirectW(&ncMetrics.lfMessageFont)))
 		return false;
-
-#if MMCS_USE_GDIP
-	Gdiplus::GdiplusStartupInput gdiplusStartupInput;
-	auto status = Gdiplus::GdiplusStartup(
-		&gdiplusToken,
-		&gdiplusStartupInput,
-		NULL
-	);
-	if (status != Gdiplus::Ok)
-		return false;
-#endif
 
 	if (!(MainWindowAccelerators = LoadAcceleratorsW(HINST_THISCOMPONENT, MAKEINTRESOURCEW(IDA_MAIN_WINDOW))))
 		return false;
@@ -74,12 +115,10 @@ bool GuiInit()
 
 void GuiUnInit()
 {
+	if (comInitStatus == S_OK)
+		CoUninitialize();
 	if (DefaultMessageFont)
 		(void)DeleteObject((HGDIOBJ)DefaultMessageFont);
-#if MMCS_USE_GDIP
-	if (gdiplusToken)
-		Gdiplus::GdiplusShutdown(gdiplusToken);
-#endif
 }
 
 // Use our system font please
@@ -99,25 +138,6 @@ void UseDefaultFontWithChildren(HWND hwnd)
 {
 	UseDefaultFont(hwnd);
 	(void)EnumChildWindows(hwnd, setFontCallback, NULL);
-}
-
-int RunMessageLoop(pDoDispatch cb, void * user_data)
-{
-	MSG msg;
-	BOOL bRet;
-	while ((bRet = GetMessageW(&msg, NULL, 0, 0)) != 0)
-	{
-		if (bRet == -1)
-			return -1;
-
-		if (!cb || cb(&msg, user_data))
-		{
-			TranslateMessage(&msg);
-			DispatchMessageW(&msg);
-		}
-	}
-
-	return (int)msg.wParam;
 }
 
 // WM_GETMINMAXINFO

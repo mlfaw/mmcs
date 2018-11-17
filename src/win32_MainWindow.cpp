@@ -140,7 +140,7 @@ void MainWindow::WmCommand(HWND hwnd, int id, HWND hwndCtrl, UINT codeNotify)
 			);
 			return;
 		}
-		win32::RegisterAsDefault_Launch();
+		win32::RegisterAsDefault::Launch();
 		break;
 	case IDM_HELP_ABOUT:
 		break;
@@ -337,24 +337,6 @@ int MainWindow::Run()
 
 bool MainWindow::Init(int w, int h, int x, int y, bool maximize)
 {
-	HINSTANCE hInstance = HINST_THISCOMPONENT;
-
-	WNDCLASSEXW wc;
-	wc.cbSize = sizeof(wc);
-	wc.style = CS_HREDRAW | CS_VREDRAW;
-	wc.lpfnWndProc = MainWindow::WndProc;
-	wc.cbClsExtra = 0;
-	wc.cbWndExtra = 0;
-	wc.hInstance = hInstance;
-	wc.hIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_MMCS_ICON));
-	wc.hCursor = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
-	wc.hbrBackground = (HBRUSH)(COLOR_GRAYTEXT + 1);
-	wc.lpszMenuName = MAKEINTRESOURCEW(IDM_MAIN_MENU);
-	wc.lpszClassName = L"MainWindow";
-	wc.hIconSm = NULL; // If NULL, it will try to get a smaller icon from hIcon
-	if (!RegisterClassExW(&wc))
-		return false;
-
 	hwnd_ = CreateWindowExW(
 		WS_EX_ACCEPTFILES,
 		L"MainWindow",
@@ -366,7 +348,7 @@ bool MainWindow::Init(int w, int h, int x, int y, bool maximize)
 		h,
 		NULL, // hwndParent
 		NULL, // hMenu (NULL if using class-menu)
-		hInstance,
+		HINST_THISCOMPONENT,
 		this // lpParam
 	);
 

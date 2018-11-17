@@ -46,7 +46,11 @@ bool getSize(osfile f, uint64_t * outsize);
 
 bool simpleRead(osfile f, void * buf, uint32_t size);
 
-bool slurp(osfile f, void ** outbuf, uint32_t * outsize);
+// free() the result...
+char * slurp(osfile f, uint32_t * outsize);
+
+// free() the result...
+oschar * getDir(const oschar * path);
 
 }
 }
