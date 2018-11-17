@@ -6,11 +6,6 @@
 // TODO: Remove CURL and wrap libtls around an HTTP header parser?
 //       With libtls, tls_config_set_ca_mem() can be used to remove libressl/openssl's usage of a hardcoded _PATH_SSL_CA_FILE
 
-#ifdef _WIN32
-// This motherfucker is right here at the top before anything can pull in Windows.h
-#include <WinSock2.h>
-#endif
-
 #include "mmcs_os.hpp"
 #include "mmcs_globals.hpp"
 #include "mmcs_file.hpp"
@@ -22,12 +17,9 @@
 #ifdef _WIN32
 #include <Windows.h>
 #include <shellapi.h> // CommandLineToArgvW()
-#include <winnt.h> // NtCurrentTeb()
-#include <winternl.h> // PTEB, PPEB
 #include "win32_RegisterAsDefault.hpp"
 #include "win32_MainWindow.hpp"
 #include "win32_gui.hpp"
-#include "msw_misc.hpp" // NT_MAX_PATH
 #include "win32_misc.hpp" // win32::GetExePath()
 #else
 #include <unistd.h> // readlink()
