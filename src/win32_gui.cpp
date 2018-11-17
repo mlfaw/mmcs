@@ -15,6 +15,7 @@
 #include "win32_gui.hpp"
 #include "generated/win32_resource.h"
 #include "win32_hinstance.h"
+#include <commctrl.h> // InitCommonControlsEx()
 
 #if MMCS_USE_GDIP
 #define GDIPVER 0x0110
@@ -29,7 +30,13 @@ static ULONG_PTR gdiplusToken = 0;
 static HFONT DefaultMessageFont = NULL;
 
 static bool GuiInit_inner()
-{
+{	
+	INITCOMMONCONTROLSEX controls;
+	controls.dwSize = sizeof(controls);
+	controls.dwICC = ICC_STANDARD_CLASSES | ICC_WIN95_CLASSES | ICC_USEREX_CLASSES;
+	if (!InitCommonControlsEx(&controls))
+		return false; // TODO: Log error
+
 	// Setup the system font to use...
 	NONCLIENTMETRICSW ncMetrics;
 	ncMetrics.cbSize = sizeof(ncMetrics);

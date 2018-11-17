@@ -1,29 +1,21 @@
 /*{REPLACEMEWITHLICENSE}*/
 #include "win32_MainWindow.hpp"
-#include <commctrl.h> // Staturs bar control
+#include <commctrl.h> // WM_NOTIFY, TCN_SELCHANGING, TCN_SELCHANGE
 #include <shellapi.h> // DragAcceptFiles(), DragFinish(), DragQueryPoint(), DragQueryFileW()
 // "Message crackers" and other helpful functions
 // https://docs.microsoft.com/en-us/windows/desktop/api/windowsx/
 #include <windowsx.h>
 
-#include <vector>
-#include <string>
-
 #include "generated/win32_resource.h"
 #include "win32_RegisterAsDefault.hpp"
 #include "mmcs_Open.hpp" // OpenUrlAsync(), OpenFileAsync()
 #include "mmcs_os.hpp"
-#include "mmcs_GetDirectoryFiles.hpp"
+#include "mmcs_GetDirectoryFiles.hpp" // std::vector, std::wstring..
 #include "mmcs_globals.hpp"
 #include "win32_gui.hpp"
 #include "win32_hinstance.h"
 #include "mmcs_SelectFilesWindow.hpp"
 #include "win32_ImagePainter.hpp"
-
-#include <iomanip>
-#include <sstream>
-#include <string>
-#include <iostream>
 
 namespace win32 {
 
@@ -70,19 +62,14 @@ void MainWindow::WmCommand(HWND hwnd, int id, HWND hwndCtrl, UINT codeNotify)
 	switch (id)
 	{
 	case IDM_FILE_NEW_TAB:
-	{
-		//static int fuck = 1;
-		//wchar_t buf[20] = {};
-		//swprintf(buf, L"files (%d)", ++fuck);
 		tabbar_.Append(L"files (0)");
 		break;
-	}
 	case IDM_CLOSE_TAB:
 	{
 		int idx = tabbar_.right_click_idx_;
 		if (idx == -1)
 			// Coming from Ctrl+W if invalid right_click_idx_
-			if (-1 == (idx = TabCtrl_GetCurSel(tabbar_.hwnd_)))
+			if (-1 == (idx = tabbar_.GetSel()))
 				break;
 		tabbar_.right_click_idx_ = -1;
 		tabbar_.Remove(idx);
@@ -143,6 +130,16 @@ void MainWindow::WmCommand(HWND hwnd, int id, HWND hwndCtrl, UINT codeNotify)
 		break;
 	}
 	case IDM_HELP_REGISTER_AS_DEFAULT:
+		if (mmcs::isPortable) {
+			(void)MessageBoxW(
+				NULL,
+				(L"MMCS is running in portable mode.\n"
+				L"Registering as the default program for media is not available."),
+				L"Register As Default",
+				MB_OK
+			);
+			return;
+		}
 		win32::RegisterAsDefault_Launch();
 		break;
 	case IDM_HELP_ABOUT:
@@ -340,26 +337,7 @@ int MainWindow::Run()
 
 bool MainWindow::Init(int w, int h, int x, int y, bool maximize)
 {
-	INITCOMMONCONTROLSEX controls;
-	controls.dwSize = sizeof(controls);
-	controls.dwICC = ICC_STANDARD_CLASSES | ICC_WIN95_CLASSES | ICC_USEREX_CLASSES;
-	if (!InitCommonControlsEx(&controls))
-		return false; // TODO: Log error
-
-	HINSTANCE hInstance = HINST_THISCOMPONENT;//mmcs::hInstance;//(HINSTANCE)GetModuleHandleW(NULL);
-
-	// TODO: Cache iconMMCS in a global variable? And error checking?
-	HICON iconMMCS = (HICON)LoadImageW(
-		hInstance,
-		MAKEINTRESOURCEW(IDI_MMCS_ICON),
-		IMAGE_ICON,
-		0,
-		0,
-		LR_SHARED
-	);
-
-	// TODO: Is cursorArrow okay to cache in a global variable?
-	HCURSOR cursorArrow = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
+	HINSTANCE hInstance = HINST_THISCOMPONENT;
 
 	WNDCLASSEXW wc;
 	wc.cbSize = sizeof(wc);
@@ -368,8 +346,8 @@ bool MainWindow::Init(int w, int h, int x, int y, bool maximize)
 	wc.cbClsExtra = 0;
 	wc.cbWndExtra = 0;
 	wc.hInstance = hInstance;
-	wc.hIcon = iconMMCS;
-	wc.hCursor = cursorArrow;
+	wc.hIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_MMCS_ICON));
+	wc.hCursor = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
 	wc.hbrBackground = (HBRUSH)(COLOR_GRAYTEXT + 1);
 	wc.lpszMenuName = MAKEINTRESOURCEW(IDM_MAIN_MENU);
 	wc.lpszClassName = L"MainWindow";
@@ -397,15 +375,12 @@ bool MainWindow::Init(int w, int h, int x, int y, bool maximize)
 
 	if (mmcs::isPortable)
 	{
-		HMENU hMenu = GetMenu(hwnd_);
 		MENUITEMINFOW item = {};
 		item.cbSize = sizeof(item);
 		item.fMask = MIIM_STATE;
 		item.fState = MFS_DISABLED;
-		(void)SetMenuItemInfoW(hMenu, IDM_HELP_REGISTER_AS_DEFAULT, FALSE, &item);
+		(void)SetMenuItemInfoW(GetMenu(hwnd_), IDM_HELP_REGISTER_AS_DEFAULT, FALSE, &item);
 	}
-
-	//win32::UseDefaultFontWithChildren(hwnd_);
 
 	(void)ShowWindow(hwnd_, maximize ? SW_SHOWMAXIMIZED : SW_SHOW);
 	(void)UpdateWindow(hwnd_);

@@ -34,6 +34,8 @@ public:
 
 	int TabUnderMouse(POINT * out);
 
+	int GetSel();
+
 	static LRESULT CALLBACK SubProc(
 		HWND hwnd,
 		UINT msg,

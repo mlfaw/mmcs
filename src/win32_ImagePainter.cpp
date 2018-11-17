@@ -45,7 +45,7 @@ static ID2D1SolidColorBrush * pBlackBrush = NULL;
 
 namespace win32 {
 
-static int nxtidx = 1;
+static int nxtidx = 2;
 static const char * ff[] = {
 	"C:\\code\\mmcs\\235KB.png",
 	"C:\\code\\mmcs\\900KB_2.jpg",
@@ -237,6 +237,8 @@ static BOOL IpWmCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
 		ImageData,
 		4 * ImageX
 	);
+	stbi_image_free(ImageData);
+	ImageData = NULL;
 	if (FAILED(hr)) return FALSE;
 
 	hr = DWriteCreateFactory(
@@ -325,17 +327,10 @@ static void IpWmPaintInner(HWND hwnd)
 	);
 
 	D2D1_RECT_F destRect = D2D1::RectF(
-#if 0
-		0.0f,
-		0.0f,
-		(float)rc.right,
-		(float)rc.bottom
-#else
 		dx,
 		dy,
 		dx + dw,
 		dh + dy
-#endif
 	);
 
 	d2d1DeviceContext->BeginDraw();
@@ -487,8 +482,6 @@ static LRESULT CALLBACK IpWindowProc(
 
 bool ImagePainter_Create(HWND hParent)
 {
-	HCURSOR cursorArrow = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
-
 	HINSTANCE hInstance = HINST_THISCOMPONENT;
 
 	WNDCLASSEXW wc;
@@ -499,7 +492,7 @@ bool ImagePainter_Create(HWND hParent)
 	wc.cbWndExtra = 0;
 	wc.hInstance = hInstance;
 	wc.hIcon = NULL;
-	wc.hCursor = cursorArrow;
+	wc.hCursor = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
 	wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
 	wc.lpszMenuName = NULL;
 	wc.lpszClassName = L"ImagePainter";
@@ -510,7 +503,7 @@ bool ImagePainter_Create(HWND hParent)
 	HWND hwnd = CreateWindowExW(
 		0, //WS_EX_ACCEPTFILES,
 		L"ImagePainter",
-		L"MMCS by mlfaw",
+		L"",
 		WS_CHILD | WS_VISIBLE,
 		0, // x
 		0, // y

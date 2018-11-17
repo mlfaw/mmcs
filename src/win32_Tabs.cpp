@@ -110,6 +110,11 @@ int Tabbar::TabUnderMouse(POINT * out)
 	return idx;
 }
 
+int Tabbar::GetSel()
+{
+	return TabCtrl_GetCurSel(hwnd_);
+}
+
 LRESULT CALLBACK Tabbar::SubProc(
 	HWND hwnd,
 	UINT msg,

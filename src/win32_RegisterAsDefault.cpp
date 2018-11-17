@@ -75,17 +75,6 @@ int RegisterAsDefault_Handler()
 
 void RegisterAsDefault_Launch()
 {
-	if (mmcs::isPortable) {
-		(void)MessageBoxW(
-			NULL,
-			(L"MMCS is running in portable mode.\n"
-			 L"Registering as the default program for media is not available."),
-			L"Register As Default",
-			MB_OK
-		);
-		return;
-	}
-
 	SHELLEXECUTEINFOW info = {0};
 	info.cbSize = sizeof(info);
 	info.lpVerb = L"runas";
