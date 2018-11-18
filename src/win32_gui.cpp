@@ -13,7 +13,7 @@
 // https://docs.microsoft.com/en-us/windows/desktop/api/WinBase/nf-winbase-readdirectorychangesw
 
 #include "win32_gui.hpp"
-#include "generated/win32_resource.h"
+#include "win32_resource.h"
 #include "win32_hinstance.h"
 #include <commctrl.h> // InitCommonControlsEx()
 #include "win32_ImagePainter.hpp"
@@ -33,7 +33,7 @@ static bool registerClasses()
 {
 	HINSTANCE hInstance = HINST_THISCOMPONENT;
 	HCURSOR cursorArrow = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
-	HICON iconMMCS = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_MMCS_ICON));
+	HICON iconMMCS = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_MMCS));
 	WNDCLASSEXW wc;
 
 	if (!cursorArrow) return false;
@@ -48,7 +48,7 @@ static bool registerClasses()
 	wc.hIcon = iconMMCS;
 	wc.hCursor = cursorArrow;
 	wc.hbrBackground = (HBRUSH)(COLOR_GRAYTEXT + 1);
-	wc.lpszMenuName = MAKEINTRESOURCEW(IDM_MAIN_MENU);
+	wc.lpszMenuName = MAKEINTRESOURCEW(IDR_MW_MENU);
 	wc.lpszClassName = L"MainWindow";
 	wc.hIconSm = NULL; // If NULL, it will try to get a smaller icon from hIcon
 	if (!RegisterClassExW(&wc))
@@ -97,7 +97,7 @@ static bool GuiInit_inner()
 	if (!(DefaultMessageFont = CreateFontIndirectW(&ncMetrics.lfMessageFont)))
 		return false;
 
-	if (!(MainWindowAccelerators = LoadAcceleratorsW(HINST_THISCOMPONENT, MAKEINTRESOURCEW(IDA_MAIN_WINDOW))))
+	if (!(MainWindowAccelerators = LoadAcceleratorsW(HINST_THISCOMPONENT, MAKEINTRESOURCEW(IDR_MW_ACCEL))))
 		return false;
 
 	return true;

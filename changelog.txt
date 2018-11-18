@@ -1,0 +1,11 @@
+Changelog for MMCS
+
+As a note, versions are UTC timestamps (year.month.day.hour).
+
+2018.10.20.13
+=============
+- Finally uploading some of this code to Github
+
+2018.10.18.03
+=============
+- ADDED a changelog to open in the text-editor.

@@ -3,7 +3,7 @@
 #include "mmcs_globals.hpp"
 #include <Windows.h>
 #include <windowsx.h> // Button_GetCheck()
-#include "generated/win32_resource.h"
+#include "win32_resource.h"
 #include "win32_hinstance.h"
 #include "win32_misc.hpp" // win32::GetExePath()
 
@@ -33,7 +33,7 @@ static INT_PTR CALLBACK DialogProc(
 	switch (msg) {
 	case WM_INITDIALOG:
 	{
-		HICON hIcon = LoadIconW(HINST_THISCOMPONENT, MAKEINTRESOURCEW(IDI_MMCS_ICON));
+		HICON hIcon = LoadIconW(HINST_THISCOMPONENT, MAKEINTRESOURCEW(IDI_MMCS));
 		(void)SendMessage(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
 		(void)SendMessage(hwnd, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
 		return TRUE;

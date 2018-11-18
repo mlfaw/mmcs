@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?> 
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
-	<assemblyIdentity version="@MMCS_YEAR@.@MMCS_MONTH@.@MMCS_DAY@.@MMCS_HOUR@" name="@MMCS_NAME@" type="win32" processorArchitecture="*"/>
-	<description>@MMCS_DESCRIPTION@</description>
+	<assemblyIdentity version="1.0.0.0" name="MMCS - My Media Categories Suite" type="win32" processorArchitecture="*"/>
+	<description>MMCS - media viewer and tagger</description>
 	<dependency> 
 		<dependentAssembly> 
 			<assemblyIdentity

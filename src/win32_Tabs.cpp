@@ -1,6 +1,6 @@
 /*{REPLACEMEWITHLICENSE}*/
 #include "win32_Tabs.hpp"
-#include "generated/win32_resource.h"
+#include "win32_resource.h"
 #include "win32_hinstance.h"
 #include <CommCtrl.h>
 #include <windowsx.h>
@@ -28,7 +28,7 @@ bool Tabbar::Init(HWND hParent)
 		rc.right, // w
 		rc.bottom, // h
 		hParent,
-		(HMENU)ID_TABBAR,
+		(HMENU)ID_TAB_BAR,
 		hInstance,
 		NULL // lpParam
 	);
@@ -38,7 +38,7 @@ bool Tabbar::Init(HWND hParent)
 
 	win32::UseDefaultFont(hwnd_);
 
-	context_menu_root_ = LoadMenuW(hInstance, MAKEINTRESOURCEW(IDM_TAB_MENU));
+	context_menu_root_ = LoadMenuW(hInstance, MAKEINTRESOURCEW(IDR_TAB_MENU));
 	if (!context_menu_root_)
 		goto err;
 	context_menu_ = GetSubMenu(context_menu_root_, 0);

@@ -1,7 +1,7 @@
 /*{REPLACEMEWITHLICENSE}*/
 #include "win32_TabPage.hpp"
 #include "win32_hinstance.h"
-#include "generated/win32_resource.h"
+#include "win32_resource.h"
 
 namespace win32 {
 

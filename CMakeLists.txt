@@ -13,13 +13,8 @@ if (NOT DEFINED MMCS_YEAR)
 	string(TIMESTAMP MMCS_DAY   "%d" UTC)
 	string(TIMESTAMP MMCS_HOUR  "%H" UTC)
 endif()
-set(MMCS_DESCRIPTION "MMCS - media viewer and tagger")
-set(MMCS_NAME        "MMCS - My Media Categories Suite")
-set(MMCS_EXE         "mmcs.exe")
 
 set(GEN_FOLDER_BASE "${CMAKE_CURRENT_BINARY_DIR}/_generated")
-include_directories("${GEN_FOLDER_BASE}")
-set(GEN_FOLDER "${GEN_FOLDER_BASE}/generated")
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" "${GEN_FOLDER_BASE}")
 include(CreateCResources)
@@ -44,8 +39,6 @@ add_definitions(
 set(mmcs_libs)
 file(GLOB mmcs_sources "src/mmcs_*")
 list(APPEND mmcs_sources
-	#"${GEN_FOLDER}/Changelog.c"
-	#"${GEN_FOLDER}/Changelog.h"
 	"${CMAKE_SOURCE_DIR}/thirdparty/stb_image.h"
 	"${CMAKE_SOURCE_DIR}/thirdparty/sqlite-amalgamation-3250300/sqlite3.c"
 	"${CMAKE_SOURCE_DIR}/thirdparty/sqlite-amalgamation-3250300/sqlite3.h"
@@ -72,15 +65,7 @@ if (WIN32)
 	file(GLOB win_sources "src/msw_*" "src/win32_*")
 	list(APPEND mmcs_sources
 		${win_sources}
-		"${GEN_FOLDER}/win32_resource.h"
-		"${GEN_FOLDER}/win32_resource.rc"
-		"${GEN_FOLDER}/win32.manifest"
 	)
-	configure_file(src/gen_win32_resource.in.h  "${GEN_FOLDER}/win32_resource.h")
-	configure_file(src/gen_win32_resource.in.rc "${GEN_FOLDER}/win32_resource.rc")
-	configure_file(src/gen_win32.in.manifest    "${GEN_FOLDER}/win32.manifest")
-	# so win32_resource can find the icon...
-	configure_file("${CMAKE_SOURCE_DIR}/resources/mmcs.ico" "${GEN_FOLDER}/mmcs.ico" COPYONLY)
 else()
 	set(THREADS_PREFER_PTHREAD_FLAG ON)
 	find_package(Threads REQUIRED)
@@ -150,11 +135,6 @@ list(APPEND mmcs_libs
 	mylibcurl
 )
 
-# Only executes in cmake's configure step...
-#execute_process(COMMAND ${CMAKE_COMMAND} -E tar "cfv" "${GEN_FOLDER}/Changelog.zip" --format=zip "${CMAKE_SOURCE_DIR}/Changelog.txt")
-#execute_process(COMMAND ${CMAKE_COMMAND} -DGEN_FOLDER=${GEN_FOLDER} -P "${CMAKE_SOURCE_DIR}/cmake/ChangelogHandler.cmake")
-
-#list(FILTER mmcs_sources EXCLUDE REGEX "README\\.md") # bye bye
 add_executable(mmcs WIN32 ${mmcs_sources})
 add_dependencies(mmcs curl) # require the externalproject to be built first
 set_property(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" PROPERTY VS_STARTUP_PROJECT mmcs)

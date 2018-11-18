@@ -13,6 +13,8 @@
 // Also the RegisterAsDefault window is launched by a
 // shellexecuteex(runas)... so don't forget that one too.
 
+// TODO: Does ShellExecute reallyyyy need COM to be initialized? If so... COM might need to be initialized in every function for the thread-pool...
+
 namespace mmcs {
 
 #ifdef _WIN32

@@ -1,7 +1,7 @@
 *
 
 !.gitignore
-!Changelog.bat
+!changelog.txt
 !CMakeLists.txt
 !polyglot_build.bat
 !README.md
@@ -17,17 +17,4 @@
 
 !/src/
 !/src/*
-
-!/uwp/
-!/uwp/mmcs.sln
-!/uwp/mmcs/
-!/uwp/mmcs/Assets/
-!/uwp/mmcs/Assets/*
-!/uwp/mmcs/*.xaml
-!/uwp/mmcs/*.cpp
-!/uwp/mmcs/*.hpp
-!/uwp/mmcs/*.h
-!/uwp/mmcs/Package.appxmanifest
-!/uwp/mmcs/mmcs.vcxproj
-!/uwp/mmcs/mmcs.vcxproj.filters
 

@@ -6,7 +6,7 @@
 // https://docs.microsoft.com/en-us/windows/desktop/api/windowsx/
 #include <windowsx.h>
 
-#include "generated/win32_resource.h"
+#include "win32_resource.h"
 #include "win32_RegisterAsDefault.hpp"
 #include "mmcs_Open.hpp" // OpenUrlAsync(), OpenFileAsync()
 #include "mmcs_os.hpp"
@@ -61,7 +61,7 @@ void MainWindow::WmCommand(HWND hwnd, int id, HWND hwndCtrl, UINT codeNotify)
 	// Menu or Accelerator
 	switch (id)
 	{
-	case IDM_FILE_NEW_TAB:
+	case IDM_NEW_TAB:
 		tabbar_.Append(L"files (0)");
 		break;
 	case IDM_CLOSE_TAB:
@@ -75,11 +75,11 @@ void MainWindow::WmCommand(HWND hwnd, int id, HWND hwndCtrl, UINT codeNotify)
 		tabbar_.Remove(idx);
 		break;
 	}
-	case IDM_FILE_OPEN_FILES:
-	case IDM_FILE_OPEN_DIRS:
+	case IDM_OPEN_FILES:
+	case IDM_OPEN_DIRS:
 	{
 		std::vector<osstring> * results;
-		bool foldersOnly = id == IDM_FILE_OPEN_DIRS;
+		bool foldersOnly = id == IDM_OPEN_DIRS;
 		if (mmcs::SelectFilesWindow(&results, foldersOnly, true))
 		{
 			for (const auto & x : *results)
@@ -90,33 +90,33 @@ void MainWindow::WmCommand(HWND hwnd, int id, HWND hwndCtrl, UINT codeNotify)
 		}
 		break;
 	}
-	case IDM_FILE_EXIT:
+	case IDM_EXIT:
 		(void)DestroyWindow(hwnd);
 		break;
-	case IDM_VIEW_TOGGLE_DARK_MODE:
+	case IDM_TOGGLE_DARK_MODE:
 	{
 		HMENU hMenu = GetMenu(hwnd);
 		MENUITEMINFOW info;
 		info.cbSize = sizeof(info);
 		info.fMask = MIIM_STATE;
-		if (!GetMenuItemInfoW(hMenu, IDM_VIEW_TOGGLE_DARK_MODE, FALSE, &info))
+		if (!GetMenuItemInfoW(hMenu, IDM_TOGGLE_DARK_MODE, FALSE, &info))
 			return;
 		if (info.fState & MFS_CHECKED)
 			info.fState &= ~MFS_CHECKED;
 		else
 			info.fState |= MFS_CHECKED;
-		if (!SetMenuItemInfoW(hMenu, IDM_VIEW_TOGGLE_DARK_MODE, FALSE, &info))
+		if (!SetMenuItemInfoW(hMenu, IDM_TOGGLE_DARK_MODE, FALSE, &info))
 			return;
 		(void)DrawMenuBar(hwnd);
 		break;
 	}
-	case IDM_HELP_WEBSITE:
+	case IDM_WEBSITE:
 		mmcs::OpenUrlAsync("https://mlfaw.com/mmcs", false);
 		break;
-	case IDM_HELP_GITHUB:
+	case IDM_GITHUB:
 		mmcs::OpenUrlAsync("https://github.com/mlfaw/mmcs", false);
 		break;
-	case IDM_HELP_CHANGELOG:
+	case IDM_CHANGELOG:
 	{
 		const oschar changelogtxt[] = _OS("/changelog.txt");
 		auto len = osstrlen(mmcs::ExeDir) + sizeof(changelogtxt);
@@ -129,7 +129,7 @@ void MainWindow::WmCommand(HWND hwnd, int id, HWND hwndCtrl, UINT codeNotify)
 			free(changelogpath);
 		break;
 	}
-	case IDM_HELP_REGISTER_AS_DEFAULT:
+	case IDM_REGISTER_AS_DEFAULT:
 		if (mmcs::isPortable) {
 			(void)MessageBoxW(
 				NULL,
@@ -142,7 +142,7 @@ void MainWindow::WmCommand(HWND hwnd, int id, HWND hwndCtrl, UINT codeNotify)
 		}
 		win32::RegisterAsDefault::Launch();
 		break;
-	case IDM_HELP_ABOUT:
+	case IDM_ABOUT:
 		break;
 	}
 }
@@ -361,7 +361,7 @@ bool MainWindow::Init(int w, int h, int x, int y, bool maximize)
 		item.cbSize = sizeof(item);
 		item.fMask = MIIM_STATE;
 		item.fState = MFS_DISABLED;
-		(void)SetMenuItemInfoW(GetMenu(hwnd_), IDM_HELP_REGISTER_AS_DEFAULT, FALSE, &item);
+		(void)SetMenuItemInfoW(GetMenu(hwnd_), IDM_REGISTER_AS_DEFAULT, FALSE, &item);
 	}
 
 	(void)ShowWindow(hwnd_, maximize ? SW_SHOWMAXIMIZED : SW_SHOW);

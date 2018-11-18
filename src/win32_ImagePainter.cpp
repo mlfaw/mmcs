@@ -3,7 +3,7 @@
 #include <windowsx.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include "../thirdparty/stb_image.h"
-#include "generated/win32_resource.h"
+#include "win32_resource.h"
 #include "win32_hinstance.h"
 #include "msw_misc.hpp" // msw::SafeRelease()
 #include "mmcs_MediaScaling.hpp"
@@ -17,7 +17,6 @@
 #include <d2d1_1helper.h>
 #include <dwrite.h>
 
-#include <stdio.h> //snwprintf()
 
 // TODO: D2DERR_RECREATE_TARGET
 
