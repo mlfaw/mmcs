@@ -119,6 +119,8 @@ void GuiUnInit()
 		CoUninitialize();
 	if (DefaultMessageFont)
 		(void)DeleteObject((HGDIOBJ)DefaultMessageFont);
+	if (MainWindowAccelerators)
+		(void)DestroyAcceleratorTable(MainWindowAccelerators);
 }
 
 // Use our system font please
