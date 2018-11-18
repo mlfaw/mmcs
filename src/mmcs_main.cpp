@@ -119,7 +119,7 @@ bool reset_current_directory()
 	wchar_t system_drive[4] = {0, L':', L'\\', 0};
 	if (!(nChars = GetCurrentDirectoryW(0, NULL)))
 		return false;
-	if (!(mmcs::OriginalWorkingDirectory = (wchar_t *)malloc(nChars)))
+	if (!(mmcs::OriginalWorkingDirectory = (wchar_t *)malloc(nChars * sizeof(wchar_t))))
 		return false;
 	if (!GetCurrentDirectoryW(nChars, mmcs::OriginalWorkingDirectory))
 		return false;
