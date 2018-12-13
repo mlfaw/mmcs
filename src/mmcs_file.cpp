@@ -293,7 +293,7 @@ bool simpleRead(osfile f, void * buf, uint32_t size)
 #endif
 }
 
-// Read entire file. A 0x00 byte is appended to simply string usage. The 0x00 byte is not included in outsize.
+// Read entire file. A 0x00 byte is appended to simplify string usage. The 0x00 byte is not included in outsize.
 char * slurp(osfile f, uint32_t * outsize)
 {
 	uint64_t size;
