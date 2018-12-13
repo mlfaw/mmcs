@@ -112,24 +112,25 @@ int main(int argc, oschar ** argv)
 // Save the original current-directory then set the current-directory to the system-drive.
 // This is done so a HANDLE to the original current-directory is not kept open.
 // (HANDLE kept open = can't delete directory / eject drive)
-bool reset_current_directory()
+wchar_t * reset_current_directory()
 {
 	DWORD nChars;
+	wchar_t * original_wd = NULL;
 	wchar_t windows_dir[MAX_PATH]; // MAX_PATH (260) is intentional
-	wchar_t system_drive[4] = {0, L':', L'\\', 0};
-	if (!(nChars = GetCurrentDirectoryW(0, NULL)))
-		return false;
-	if (!(mmcs::OriginalWorkingDirectory = (wchar_t *)malloc(nChars * sizeof(wchar_t))))
-		return false;
-	if (!GetCurrentDirectoryW(nChars, mmcs::OriginalWorkingDirectory))
-		return false;
+	wchar_t system_drive[] = L"C:\\";
 	nChars = GetSystemWindowsDirectoryW(windows_dir, MAX_PATH);
 	if (!nChars || nChars > MAX_PATH)
-		return false;
+		return NULL;
 	system_drive[0] = windows_dir[0];
-	if (!SetCurrentDirectoryW(system_drive))
-		return false;
-	return true;
+	if (!(nChars = GetCurrentDirectoryW(0, NULL)))
+		return NULL;
+	if (!(original_wd = (wchar_t *)malloc(nChars * sizeof(wchar_t))))
+		return NULL;
+	if (!GetCurrentDirectoryW(nChars, original_wd) || !SetCurrentDirectoryW(system_drive)) {
+		free(original_wd);
+		return NULL;
+	}
+	return original_wd;
 }
 
 int CALLBACK wWinMain(
@@ -148,7 +149,9 @@ int CALLBACK wWinMain(
 	(void)hPrevInstance;
 	(void)nCmdShow;
 
-	if (!reset_current_directory()) return 1;
+	if (!(mmcs::OriginalWorkingDirectory = reset_current_directory()))
+		return 1;
+	mmcs::ScopedFree sf_OriginalWorkingDirectory(mmcs::OriginalWorkingDirectory);
 
 	if (win32::RegisterAsDefault::Handler(lpCmdLine))
 		return 0;
