@@ -78,9 +78,9 @@ void MainWindow::WmCommand(HWND hwnd, int id, HWND hwndCtrl, UINT codeNotify)
 	case IDM_OPEN_FILES:
 	case IDM_OPEN_DIRS:
 	{
-		std::vector<osstring> * results;
 		bool foldersOnly = id == IDM_OPEN_DIRS;
-		if (mmcs::SelectFilesWindow(&results, foldersOnly, true))
+		std::vector<osstring> * results = mmcs::SelectFilesWindow(foldersOnly, true);
+		if (results)
 		{
 			for (const auto & x : *results)
 			{

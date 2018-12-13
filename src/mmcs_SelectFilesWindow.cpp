@@ -11,7 +11,7 @@
 namespace mmcs {
 
 #ifdef _WIN32
-bool SelectFilesWindow(std::vector<osstring> ** results, bool foldersOnly, bool multiSelect)
+std::vector<osstring> * SelectFilesWindow(bool foldersOnly, bool multiSelect)
 {
 // TODO: Decide if each OS impl should be kept in the same function definition...
 	HRESULT hr;
@@ -29,7 +29,7 @@ bool SelectFilesWindow(std::vector<osstring> ** results, bool foldersOnly, bool 
 		L"{F1CA2B12-F24C-4FCC-A840-23C610247504}";
 
 	hr = IIDFromString(FileDialogPersistanceGUID, (IID *)&persistanceGuid);
-	if (FAILED(hr)) return false;
+	if (FAILED(hr)) return NULL;
 
 	// TODO: Use the following around things that need to be ->Release()'d?
 	// https://docs.microsoft.com/en-us/cpp/atl/reference/ccomptr-class?view=vs-2017
@@ -41,7 +41,7 @@ bool SelectFilesWindow(std::vector<osstring> ** results, bool foldersOnly, bool 
 		CLSCTX_INPROC_SERVER,
 		IID_PPV_ARGS(&fileDialog)
 	);
-	if (FAILED(hr)) return false;
+	if (FAILED(hr)) return NULL;
 	hr = fileDialog->SetClientGuid(persistanceGuid);
 	if (FAILED(hr)) goto out;
 	hr = fileDialog->GetOptions(&dwFlags);
@@ -66,6 +66,7 @@ bool SelectFilesWindow(std::vector<osstring> ** results, bool foldersOnly, bool 
 	try {
 		files = new std::vector<osstring>();
 	} catch (...) {
+		files = NULL;
 		hr = E_ABORT;
 		goto out;
 	}
@@ -100,11 +101,11 @@ out:
 		shellItems->Release();
 	if (fileDialog)
 		fileDialog->Release();
-	if (SUCCEEDED(hr))
-		*results = files;
-	else if (files)
+	if (!SUCCEEDED(hr) && files) {
 		delete files;
-	return SUCCEEDED(hr);
+		files = NULL;
+	}
+	return files;
 }
 #endif
 

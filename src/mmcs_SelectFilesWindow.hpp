@@ -6,7 +6,7 @@
 
 namespace mmcs {
 
-bool SelectFilesWindow(std::vector<osstring> ** results, bool foldersOnly, bool multiSelect);
+std::vector<osstring> * SelectFilesWindow(bool foldersOnly, bool multiSelect);
 
 }
 
