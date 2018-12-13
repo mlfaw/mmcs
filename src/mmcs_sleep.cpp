@@ -5,6 +5,7 @@
 #include <Windows.h> // Sleep()
 #else
 #include <time.h> // nanosleep()
+#include <errno.h>
 #endif
 
 namespace mmcs {
