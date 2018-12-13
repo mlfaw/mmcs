@@ -47,14 +47,17 @@ static oschar * getExeDir()
 		return NULL;
 	}
 	exe[nbytes] = 0;
-	if (s.st_size == 0) { // resize buffer from PATH_MAX
-		char * x = (char *)realloc(exe, nbytes+1);
-		if (x) exe = x;
-	}
 
-	char * dir = mmcs::file::getDir(exe);
-	free(exe);
-	return dir;
+	oschar * rchr = osstrrchr(exe, _OS('/'));
+	if (!rchr) {
+		free(exe);
+		return NULL;
+	}
+	*rchr = 0;
+
+	char * x = (char *)realloc(exe, strlen(exe)+1);
+	if (x) exe = x;
+	return exe;
 #endif
 
 	return NULL;
