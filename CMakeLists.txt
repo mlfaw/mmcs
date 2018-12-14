@@ -25,7 +25,7 @@ set(MY_LIBRESSL_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/libressl-2.8.2/inclu
 set(MY_LIBRESSL_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/libressl")
 configure_file("${CMAKE_SOURCE_DIR}/cmake/FindOpenSSL.in.cmake" "${GEN_FOLDER_BASE}/FindOpenSSL.cmake" @ONLY)
 # Includes our static-built-libressl in place of OpenSSL
-find_package(OpenSSL REQUIRED)
+# find_package(OpenSSL REQUIRED)
 
 add_definitions(
 	-DMMCS_YEAR=${MMCS_YEAR}
@@ -72,70 +72,70 @@ else()
 	list(APPEND mmcs_libs Threads::Threads)
 endif()
 
-include(ExternalProject)
-if (MSVC)
-	set(__BUILD_TYPE_PREFIX "${CMAKE_BUILD_TYPE}/")
-else()
-	set(__BUILD_TYPE_PREFIX "")
-endif()
+# include(ExternalProject)
+# if (MSVC)
+# 	set(__BUILD_TYPE_PREFIX "${CMAKE_BUILD_TYPE}/")
+# else()
+# 	set(__BUILD_TYPE_PREFIX "")
+# endif()
 
-set(CURL_SOURCE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/curl-7.62.0")
-set(CURL_BUILD_DIR "${CMAKE_BINARY_DIR}/curl/src/curl-build/lib")
-if (CMAKE_BUILD_TYPE MATCHES Debug)
-	set(CURL_LIB_POSTFIX "-d")
-	if (MSVC)
-		set(ZLIB_LIB_POSTFIX "d")
-	endif()
-else()
-	set(CURL_LIB_POSTFIX "")
-endif()
-set(CURL_CMAKE_ARGS
-	-DBUILD_CURL_EXE:BOOL=OFF
-	-DBUILD_SHARED_LIBS:BOOL=OFF
-	-DHTTP_ONLY:BOOL=ON
-	-DCMAKE_USE_LIBSSH2:BOOL=OFF
-	-DCMAKE_USE_OPENSSL:BOOL=ON
-	-DCURL_ZLIB:BOOL=OFF
-	-DENABLE_MANUAL:BOOL=OFF
-	-DCURL_CA_BUNDLE:STRING=none
-	-DCMAKE_MODULE_PATH:STRING=${CMAKE_MODULE_PATH}
-	-DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
-	-DBUILD_TESTING:BOOL=OFF
-)
-ExternalProject_Add(
-	curl
-	PREFIX curl
-	INSTALL_COMMAND ""
-	SOURCE_DIR "${CURL_SOURCE_DIR}"
-	CMAKE_CACHE_ARGS "${CURL_CMAKE_ARGS}"
-)
-add_library(mylibcurl STATIC IMPORTED)
-set_target_properties(mylibcurl PROPERTIES IMPORTED_LOCATION "${CURL_BUILD_DIR}/${__BUILD_TYPE_PREFIX}libcurl${CURL_LIB_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+# set(CURL_SOURCE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/curl-7.62.0")
+# set(CURL_BUILD_DIR "${CMAKE_BINARY_DIR}/curl/src/curl-build/lib")
+# if (CMAKE_BUILD_TYPE MATCHES Debug)
+# 	set(CURL_LIB_POSTFIX "-d")
+# 	if (MSVC)
+# 		set(ZLIB_LIB_POSTFIX "d")
+# 	endif()
+# else()
+# 	set(CURL_LIB_POSTFIX "")
+# endif()
+# set(CURL_CMAKE_ARGS
+# 	-DBUILD_CURL_EXE:BOOL=OFF
+# 	-DBUILD_SHARED_LIBS:BOOL=OFF
+# 	-DHTTP_ONLY:BOOL=ON
+# 	-DCMAKE_USE_LIBSSH2:BOOL=OFF
+# 	-DCMAKE_USE_OPENSSL:BOOL=ON
+# 	-DCURL_ZLIB:BOOL=OFF
+# 	-DENABLE_MANUAL:BOOL=OFF
+# 	-DCURL_CA_BUNDLE:STRING=none
+# 	-DCMAKE_MODULE_PATH:STRING=${CMAKE_MODULE_PATH}
+# 	-DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
+# 	-DBUILD_TESTING:BOOL=OFF
+# )
+# ExternalProject_Add(
+# 	curl
+# 	PREFIX curl
+# 	INSTALL_COMMAND ""
+# 	SOURCE_DIR "${CURL_SOURCE_DIR}"
+# 	CMAKE_CACHE_ARGS "${CURL_CMAKE_ARGS}"
+# )
+# add_library(mylibcurl STATIC IMPORTED)
+# set_target_properties(mylibcurl PROPERTIES IMPORTED_LOCATION "${CURL_BUILD_DIR}/${__BUILD_TYPE_PREFIX}libcurl${CURL_LIB_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
-set(ZLIB_ROOT "${CMAKE_SOURCE_DIR}/thirdparty/zlib-1.2.11")
-if (UNIX)
-	set(ZLIB_LIBRARY "${CMAKE_BINARY_DIR}/zlib/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
-else()
-	set(ZLIB_LIBRARY "${CMAKE_BINARY_DIR}/zlib/${__BUILD_TYPE_PREFIX}${CMAKE_STATIC_LIBRARY_PREFIX}zlibstatic${ZLIB_LIB_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
-endif()
-find_package(ZLIB)
+# set(ZLIB_ROOT "${CMAKE_SOURCE_DIR}/thirdparty/zlib-1.2.11")
+# if (UNIX)
+# 	set(ZLIB_LIBRARY "${CMAKE_BINARY_DIR}/zlib/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
+# else()
+# 	set(ZLIB_LIBRARY "${CMAKE_BINARY_DIR}/zlib/${__BUILD_TYPE_PREFIX}${CMAKE_STATIC_LIBRARY_PREFIX}zlibstatic${ZLIB_LIB_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+# endif()
+# find_package(ZLIB)
 
-include_directories(
-	"${ZLIB_INCLUDE_DIRS}"
-	"${OPENSSL_INCLUDE_DIR}"
-	"${CURL_SOURCE_DIR}/include"
-	"${CURL_BUILD_DIR}"
-)
+# include_directories(
+# 	"${ZLIB_INCLUDE_DIRS}"
+# 	"${OPENSSL_INCLUDE_DIR}"
+# 	"${CURL_SOURCE_DIR}/include"
+# 	"${CURL_BUILD_DIR}"
+# )
 
-list(APPEND mmcs_libs
-	OpenSSL::Crypto
-	OpenSSL::SSL
-	ZLIB::ZLIB
-	"${LIBRESSL_TLS_LIBRARY}"
-	mylibcurl
-)
+# list(APPEND mmcs_libs
+# 	OpenSSL::Crypto
+# 	OpenSSL::SSL
+# 	ZLIB::ZLIB
+# 	"${LIBRESSL_TLS_LIBRARY}"
+# 	mylibcurl
+# )
 
 add_executable(mmcs WIN32 ${mmcs_sources})
-add_dependencies(mmcs curl) # require the externalproject to be built first
+# add_dependencies(mmcs curl) # require the externalproject to be built first
 set_property(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" PROPERTY VS_STARTUP_PROJECT mmcs)
 target_link_libraries(mmcs ${mmcs_libs})
