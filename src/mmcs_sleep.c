@@ -1,5 +1,5 @@
 /*{REPLACEMEWITHLICENSE}*/
-#include "mmcs_sleep.hpp"
+#include "mmcs_sleep.h"
 
 #ifdef _WIN32
 #include <Windows.h> // Sleep()
@@ -8,9 +8,11 @@
 #include <errno.h>
 #endif
 
-namespace mmcs {
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-void sleepMS(unsigned int milliseconds)
+void mmcs_sleepMS(unsigned int milliseconds)
 {
 #ifdef _WIN32
 	Sleep(milliseconds);
@@ -24,12 +26,13 @@ void sleepMS(unsigned int milliseconds)
 #endif
 }
 
-inline void artificallySlowMS(unsigned int milliseconds)
+inline void mmcs_artificallySlowMS(unsigned int milliseconds)
 {
 #if MMCS_ARTICIALLY_SLOW
 	sleepMS(milliseconds);
 #endif
 }
 
+#ifdef __cplusplus
 }
-
+#endif
