@@ -38,12 +38,18 @@ add_definitions(
 
 set(mmcs_libs)
 file(GLOB mmcs_sources "src/mmcs_*")
+file(GLOB hash_functions "${CMAKE_SOURCE_DIR}/thirdparty/hash_functions/hash_functions/*")
 list(APPEND mmcs_sources
+	${hash_functions}
 	"${CMAKE_SOURCE_DIR}/thirdparty/stb_image.h"
 	"${CMAKE_SOURCE_DIR}/thirdparty/sqlite-amalgamation/sqlite3.c"
 	"${CMAKE_SOURCE_DIR}/thirdparty/sqlite-amalgamation/sqlite3.h"
 	#"src/small_zip.c"
 	#"src/small_zip.h"
+)
+
+include_directories(
+	"${CMAKE_SOURCE_DIR}/thirdparty/hash_functions"
 )
 
 # TODO: https://www.sqlite.org/compile.html
