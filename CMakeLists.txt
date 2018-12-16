@@ -21,9 +21,9 @@ include(CreateCResources)
 include(MSVCParallelBuild)
 #include(MSVCStaticLibs)
 
-set(MY_LIBRESSL_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/libressl-2.8.2/include")
-set(MY_LIBRESSL_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/libressl")
-configure_file("${CMAKE_SOURCE_DIR}/cmake/FindOpenSSL.in.cmake" "${GEN_FOLDER_BASE}/FindOpenSSL.cmake" @ONLY)
+#set(MY_LIBRESSL_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/libressl/include")
+#set(MY_LIBRESSL_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/libressl")
+#configure_file("${CMAKE_SOURCE_DIR}/cmake/FindOpenSSL.in.cmake" "${GEN_FOLDER_BASE}/FindOpenSSL.cmake" @ONLY)
 # Includes our static-built-libressl in place of OpenSSL
 # find_package(OpenSSL REQUIRED)
 
@@ -40,8 +40,8 @@ set(mmcs_libs)
 file(GLOB mmcs_sources "src/mmcs_*")
 list(APPEND mmcs_sources
 	"${CMAKE_SOURCE_DIR}/thirdparty/stb_image.h"
-	"${CMAKE_SOURCE_DIR}/thirdparty/sqlite-amalgamation-3250300/sqlite3.c"
-	"${CMAKE_SOURCE_DIR}/thirdparty/sqlite-amalgamation-3250300/sqlite3.h"
+	"${CMAKE_SOURCE_DIR}/thirdparty/sqlite-amalgamation/sqlite3.c"
+	"${CMAKE_SOURCE_DIR}/thirdparty/sqlite-amalgamation/sqlite3.h"
 	#"src/small_zip.c"
 	#"src/small_zip.h"
 )
@@ -79,7 +79,7 @@ endif()
 # 	set(__BUILD_TYPE_PREFIX "")
 # endif()
 
-# set(CURL_SOURCE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/curl-7.62.0")
+# set(CURL_SOURCE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/curl")
 # set(CURL_BUILD_DIR "${CMAKE_BINARY_DIR}/curl/src/curl-build/lib")
 # if (CMAKE_BUILD_TYPE MATCHES Debug)
 # 	set(CURL_LIB_POSTFIX "-d")
@@ -112,7 +112,7 @@ endif()
 # add_library(mylibcurl STATIC IMPORTED)
 # set_target_properties(mylibcurl PROPERTIES IMPORTED_LOCATION "${CURL_BUILD_DIR}/${__BUILD_TYPE_PREFIX}libcurl${CURL_LIB_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
-# set(ZLIB_ROOT "${CMAKE_SOURCE_DIR}/thirdparty/zlib-1.2.11")
+# set(ZLIB_ROOT "${CMAKE_SOURCE_DIR}/thirdparty/zlib")
 # if (UNIX)
 # 	set(ZLIB_LIBRARY "${CMAKE_BINARY_DIR}/zlib/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
 # else()
