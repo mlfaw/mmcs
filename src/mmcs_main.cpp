@@ -17,10 +17,10 @@
 #ifdef _WIN32
 #include <Windows.h>
 #include <shellapi.h> // CommandLineToArgvW()
-#include "win32_RegisterAsDefault.hpp"
 #include "win32_MainWindow.hpp"
 #include "win32_gui.hpp"
-#include "win32_misc.hpp" // win32::GetExePath()
+#include <winnt.h> // NtCurrentTeb()
+#include <winternl.h> // PTEB, PPEB
 #else
 #include <unistd.h> // readlink()
 #include <linux/limits.h> // PATH_MAX
@@ -33,7 +33,9 @@ static const oschar portable_filename[] = _OS("mmcs_portable.txt");
 static oschar * getExeDir()
 {
 #ifdef _WIN32
-	return mmcs::file::getDir(win32::GetExePath());
+	return mmcs::file::getDir(
+		NtCurrentTeb()->ProcessEnvironmentBlock->ProcessParameters->ImagePathName.Buffer
+	);
 #elif defined(__linux__)
 	const char proc_exe[] = "/proc/self/exe";
 	struct stat s;
@@ -155,9 +157,6 @@ int CALLBACK wWinMain(
 	if (!(mmcs::OriginalWorkingDirectory = reset_current_directory()))
 		return 1;
 	mmcs::ScopedFree sf_OriginalWorkingDirectory(mmcs::OriginalWorkingDirectory);
-
-	if (win32::RegisterAsDefault::Handler(lpCmdLine))
-		return 0;
 
 	// Avoid allocating since there's no args... little things add up...
 	if (!*lpCmdLine)

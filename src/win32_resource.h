@@ -14,7 +14,7 @@
 #define IDM_WEBSITE              108
 #define IDM_GITHUB               109
 #define IDM_CHANGELOG            110
-#define IDM_REGISTER_AS_DEFAULT  111
+
 #define ID_TAB_BAR               112
 #define IDR_MW_MENU              113
 

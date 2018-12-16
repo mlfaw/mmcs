@@ -7,7 +7,6 @@
 #include <windowsx.h>
 
 #include "win32_resource.h"
-#include "win32_RegisterAsDefault.hpp"
 #include "mmcs_Open.hpp" // OpenUrlAsync(), OpenFileAsync()
 #include "mmcs_os.hpp"
 #include "mmcs_GetDirectoryFiles.hpp" // std::vector, std::wstring..
@@ -129,19 +128,6 @@ void MainWindow::WmCommand(HWND hwnd, int id, HWND hwndCtrl, UINT codeNotify)
 			free(changelogpath);
 		break;
 	}
-	case IDM_REGISTER_AS_DEFAULT:
-		if (mmcs::isPortable) {
-			(void)MessageBoxW(
-				NULL,
-				(L"MMCS is running in portable mode.\n"
-				L"Registering as the default program for media is not available."),
-				L"Register As Default",
-				MB_OK
-			);
-			return;
-		}
-		win32::RegisterAsDefault::Launch();
-		break;
 	case IDM_ABOUT:
 		break;
 	}
@@ -354,15 +340,6 @@ bool MainWindow::Init(int w, int h, int x, int y, bool maximize)
 
 	if (!hwnd_)
 		return false;
-
-	if (mmcs::isPortable)
-	{
-		MENUITEMINFOW item = {};
-		item.cbSize = sizeof(item);
-		item.fMask = MIIM_STATE;
-		item.fState = MFS_DISABLED;
-		(void)SetMenuItemInfoW(GetMenu(hwnd_), IDM_REGISTER_AS_DEFAULT, FALSE, &item);
-	}
 
 	(void)ShowWindow(hwnd_, maximize ? SW_SHOWMAXIMIZED : SW_SHOW);
 	(void)UpdateWindow(hwnd_);
