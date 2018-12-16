@@ -110,9 +110,6 @@ void MainWindow::WmCommand(HWND hwnd, int id, HWND hwndCtrl, UINT codeNotify)
 		break;
 	}
 	case IDM_WEBSITE:
-		mmcs::OpenUrlAsync("https://mlfaw.com/mmcs", false);
-		break;
-	case IDM_GITHUB:
 		mmcs::OpenUrlAsync("https://github.com/mlfaw/mmcs", false);
 		break;
 	case IDM_CHANGELOG:

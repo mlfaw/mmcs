@@ -12,7 +12,7 @@
 #define IDM_TEST                 106
 #define IDM_TOGGLE_DARK_MODE     107
 #define IDM_WEBSITE              108
-#define IDM_GITHUB               109
+
 #define IDM_CHANGELOG            110
 
 #define ID_TAB_BAR               112
