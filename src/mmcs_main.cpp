@@ -6,7 +6,7 @@
 // TODO: Remove CURL and wrap libtls around an HTTP header parser?
 //       With libtls, tls_config_set_ca_mem() can be used to remove libressl/openssl's usage of a hardcoded _PATH_SSL_CA_FILE
 
-#include "mmcs_os.hpp"
+#include "mmcs_os.h"
 #include "mmcs_globals.hpp"
 #include "mmcs_file.hpp"
 #include "mmcs_NativeMessaging.hpp"

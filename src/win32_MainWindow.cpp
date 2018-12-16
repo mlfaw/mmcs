@@ -8,7 +8,7 @@
 
 #include "win32_resource.h"
 #include "mmcs_Open.hpp" // OpenUrlAsync(), OpenFileAsync()
-#include "mmcs_os.hpp"
+#include "mmcs_os.h"
 #include "mmcs_GetDirectoryFiles.hpp" // std::vector, std::wstring..
 #include "mmcs_globals.hpp"
 #include "win32_gui.hpp"

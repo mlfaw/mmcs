@@ -1,6 +1,6 @@
 /*{REPLACEMEWITHLICENSE}*/
 #pragma once
-#include "mmcs_os.hpp" // oschar
+#include "mmcs_os.h" // oschar
 
 namespace mmcs {
 
