@@ -28,6 +28,11 @@ Building:
 - For Windows: `.\polyglot_build.bat` (Powershell) or `polyglot_build.bat` (CMD Prompt)
 - For Linux: `./polyglot_build.bat`
 
+Dependencies:
+- `thirdparty/hash_functions/` needs to be the following repo https://github.com/mlfaw/hash_functions
+- `thirdparty/sqlite-amalgamation/` needs to be the latest SQLite amalgamation https://www.sqlite.org/download.html
+- `thirdparty/stb_image.h` is from https://github.com/nothings/stb
+
 List of things to make/add/use:
 - Media decoders:
   - jpg - libjpeg-turbo? 
