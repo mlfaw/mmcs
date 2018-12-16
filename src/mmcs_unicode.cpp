@@ -1,7 +1,5 @@
 /*{REPLACEMEWITHLICENSE}*/
 #include "mmcs_unicode.hpp"
-#include <stddef.h> // size_t
-#include <string> // string, u16string
 #include <locale> // wstring_convert
 #include <codecvt> // codecvt_utf8_utf16
 #include <string.h> // strlen()

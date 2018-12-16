@@ -1,6 +1,6 @@
 /*{REPLACEMEWITHLICENSE}*/
 #pragma once
-#include <stddef.h>
+#include <stddef.h> // size_t
 #include <string>
 
 // UTF16_CHAR_TYPE & UTF16_STRING_TYPE are used to work around a Visual Studio bug with std::u16string.
