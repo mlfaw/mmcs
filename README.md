@@ -5,7 +5,7 @@
 Examples of tags include `artist:vincent_van_gogh` (or even `vincent_van_gogh_(artist)`) or `baseball_bat` which can be used to filter/query media in a database.
 
 Reasons to make MMCS:
-- Image viewing software taking seconds to open images with an SSD is ridiculous
+- Image viewing software taking seconds to open images with an SSD is ridiculous.
 - Hydrus is a resource-hog. Some notes from Windows:
   - Python 2 adds a lot of overhead. GTK+ on Windows adds a lot of overhead.
   - On a freshly started instance with a clean database 600+ MBs of RAM / Private Bytes are used.
@@ -14,31 +14,34 @@ Reasons to make MMCS:
 - Media importing/hashing can be sped up.
 - I want to make it my own.
 
-Platform support priority notes:
-1. is Windows 10 (completely updated). The long-path limit can be removed too in Windows 10... God bless...
-2. is Windows 7... Direct2D and really every other API is supported by Windows 7 IF the "Platform Update for Windows 7" is installed... which it should be.
-3. is Linux & X11. Might want a GUI toolkit for this... GTK+?
-4. is BSDs/Unices using X11. This should mostly come from the Linux/X11 port. There's a few annoying things such as openbsd not having a /proc/self/exe (to readlink() & grab binary path to determine if in portable mode)
-5. is Linux & Wayland. This can come from a GUI toolkit easily. GTK+ & Qt both have Wayland backends.
-6. is Windows 10 and UWP. Some Windows 10 versions prevent applications to be installed from outside the MS Store....
-7. macOS
-8. is NOT Windows 8.1/8/Vista/XP. They need to die.
+Platform support:
+- Windows 10 is the main platform. Windows 7 will be supported too.
+- Linux with X11 and Wayland will be supported eventually likely through GTK+.
+- BSDs supported will follow the same GUI code as Linux.
+- Maybe support for Microsoft's UWP platform which is used on the Windows (10) Store.
+- macOS support is far, far away, if ever...
 
 Building:
-- For Windows: `.\polyglot_build.bat` (Powershell) or `polyglot_build.bat` (CMD Prompt)
-- For Linux: `./polyglot_build.bat`
+- Run `./polyglot_build.bat` in a terminal, Powershell, or Command Prompt.
 
 Dependencies:
 - `thirdparty/hash_functions/` needs to be the following repo https://github.com/mlfaw/hash_functions
 - `thirdparty/sqlite-amalgamation/` needs to be the latest SQLite amalgamation https://www.sqlite.org/download.html
 - `thirdparty/stb_image.h` is from https://github.com/nothings/stb
+- Disabled libraries ATM:
+  - LibreSSL - statically linked
+    - Built by `polyglot_build.bat` before the MMCS CMake superbuild is.
+    - Custom `FindOpenSSL.cmake` file used to link to libcurl & mmcs without modifying an external project's files.
+  - libcurl - statically linked
+    - Uses LibreSSL through modified CMAKE_MODULE_PATH to use custom `FindOpenSSL.cmake`
+    - Replace with another HTTP parser/library wrapped within libtls (HTTPS) / raw sockets (HTTP)?
 
 List of things to make/add/use:
 - Media decoders:
-  - jpg - libjpeg-turbo? 
-  - png - libpng?
-  - gif
-  - webm / vp8 / vp9
+  - jpg - libjpeg-turbo
+  - png - libpng
+  - gif - giflib
+  - webm / vp8 / vp9 - libvpx(?) / libwebm
   - mkv
   - mp4
   - bmp
@@ -48,16 +51,15 @@ List of things to make/add/use:
     - ogg
     - aac
     - wav
-    - flac
+    - flac - libFLAC
 - Database(s).
-  - SQLite. Whole tag and media databases?
+  - SQLite. Entire tag and media databases?
   - PostgreSQL or MySQL for more performant operations? There's a lot of tags...
 - Hash functions
   - (Note: Read chunk into buffer and use separate threads to digest in parallel)
   - MD5: Many boorus use this, so this would help synchronize a tag database.
-  - SHA256: Used by Hydrus. Would be simpler to import Hydrus databases by using this.
-  - SHA512: 50% faster than SHA256 on x64 architectures
-  - insert other fast hash functions since large files will be hashed...
+  - SHA-256: Used by Hydrus. Would be simpler to import Hydrus databases by using this.
+    - https://en.wikipedia.org/wiki/Intel_SHA_extensions
 - JSON parser and generator. So much uses JSON... 
 - HTML parser.
 - HTTP, HTTPS, HTTP/2, encryption libs (libressl, openssl, boringssl, GnuTLS, WinAPI)...
@@ -90,16 +92,6 @@ Misc notes:
     - This approach's effectiveness will known on implementation... and hopefully end my quest for smooth media painting even during window-resizing...
 - The media-preview grid SHOULD NOT use new HWNDs for every item. 1000s of results = 1000s of windows. This may mean using a fixed number of preview HWNDs that paint new previews when scrolling. This may also mean using DirectX, Direct2D, OpenGL, or Vulkan to draw the layout and images entirely...
 - Figure out how to retrieve the Windows 10 setting for Light or Dark Mode... and obviously react to it... And the accent color too...
-
-Currently used libraries:
-- SQLite 3.25.3 - statically linked
-  - `sqlite3.c` and `sqlite3.h` are added to `mmcs_sources` in `CMakelists.txt`. Simple.
-- LibreSSL 2.8.2 - statically linked
-  - Built by `polyglot_build.bat` before the MMCS CMake superbuild is.
-  - Custom `FindOpenSSL.cmake` file used to link to libcurl & mmcs without modifying an external project's files.
-- libcurl 7.62.0 - statically linked
-  - Uses LibreSSL through modified CMAKE_MODULE_PATH to use custom `FindOpenSSL.cmake`
-  - Replace with another HTTP parser/library wrapped within libtls (HTTPS) / raw sockets (HTTP)?
 
 Relevant links or projects:
 - https://skia.org/
