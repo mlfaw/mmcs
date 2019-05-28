@@ -111,3 +111,4 @@ Relevant links or projects:
   - Many links to other downloaders.
 - https://github.com/CuddleBear92/Hydrus-Presets-and-Scripts/issues/57
   - Often, images from websites will not be the same image that a person created. This is due to resizing, reencoding, and stripping of metadata. This has links for perceptual hashing instead of file-content hashing.
+- https://randomascii.wordpress.com/2018/12/03/a-not-called-function-can-cause-a-5x-slowdown/  Maybe check if 1 arg and if so use fake_argv, but if rewriting argument parsing then might as well rewrite CommandLineToArgvW() too
